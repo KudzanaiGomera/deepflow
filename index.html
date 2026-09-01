@@ -1,0 +1,2820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DeepFlow</title>
+<link href="data:," rel="icon"/>
+<style>
+    /* ============================================================
+       DeepFlow — Design tokens
+       Palette: deep slate surface, indigo (focus) / amber (break)
+       Type: system UI for text, tabular monospace for the readout
+       ============================================================ */
+    :root {
+      --bg-0: #0B0D12;
+      --bg-1: #12151C;
+      --surface: #171B24;
+      --surface-raised: #1D212C;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.14);
+
+      --text-primary: #EDEFF4;
+      --text-secondary: #9096A8;
+      --text-muted: #5B6376;
+
+      --focus: #5B7FFF;
+      --focus-strong: #7C9AFF;
+      --break: #F0A868;
+      --break-strong: #F6BE8C;
+      --success: #3DDC97;
+      --warning: #F0C36D;
+      --danger: #E5626A;
+
+      --radius-lg: 18px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+      --radius-pill: 999px;
+
+      --shadow-card: 0 20px 50px -20px rgba(0, 0, 0, 0.6);
+      --shadow-soft: 0 6px 16px -6px rgba(0, 0, 0, 0.45);
+
+      --ease: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Light theme — applied via .theme-light on <html> when Dark Mode is off */
+    html.theme-light {
+      --bg-0: #F1F3F9;
+      --bg-1: #FFFFFF;
+      --surface: #FFFFFF;
+      --surface-raised: #F7F8FC;
+      --border: rgba(15, 23, 42, 0.09);
+      --border-strong: rgba(15, 23, 42, 0.18);
+
+      --text-primary: #171A21;
+      --text-secondary: #5B6274;
+      --text-muted: #8A90A3;
+
+      --focus: #4A63E6;
+      --focus-strong: #3549C4;
+      --break: #C97A2E;
+      --break-strong: #A8611F;
+      --success: #16A776;
+      --warning: #B4790F;
+      --danger: #CF3541;
+
+      --shadow-card: 0 20px 45px -22px rgba(15, 23, 42, 0.22);
+      --shadow-soft: 0 8px 18px -8px rgba(15, 23, 42, 0.18);
+    }
+
+    html.theme-light body {
+      background:
+        radial-gradient(1200px 600px at 15% -10%, rgba(74, 99, 230, 0.06), transparent 60%),
+        radial-gradient(900px 500px at 100% 110%, rgba(201, 122, 46, 0.05), transparent 60%),
+        var(--bg-0);
+    }
+
+    body,
+    .card,
+    .settings-panel,
+    button,
+    .session-count,
+    .status-pill,
+    .setting-item input,
+    .notification {
+      transition: background-color 0.3s var(--ease), color 0.3s var(--ease), border-color 0.3s var(--ease);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Helvetica Neue', Arial, sans-serif;
+      background:
+        radial-gradient(1200px 600px at 15% -10%, rgba(91, 127, 255, 0.10), transparent 60%),
+        radial-gradient(900px 500px at 100% 110%, rgba(240, 168, 104, 0.06), transparent 60%),
+        var(--bg-0);
+      background-attachment: fixed;
+      margin: 0;
+      padding: clamp(12px, 4vw, 32px);
+      color: var(--text-primary);
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulseRing {
+      0% { box-shadow: 0 0 0 0 rgba(91, 127, 255, 0.35); }
+      100% { box-shadow: 0 0 0 14px rgba(91, 127, 255, 0); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .app {
+      width: 100%;
+      max-width: 900px;
+      margin: auto;
+      animation: fadeIn 0.5s var(--ease);
+    }
+
+    /* ---------- Header ---------- */
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: clamp(16px, 3vw, 28px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-align: left;
+    }
+
+    .brand-mark {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, var(--focus) 0%, #8F6BFF 100%);
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 8px 20px -6px rgba(91, 127, 255, 0.55);
+    }
+
+    .brand-mark svg { width: 20px; height: 20px; }
+
+    .brand-text h1 {
+      font-size: clamp(1.15rem, 2.4vw, 1.4rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+      line-height: 1.2;
+    }
+
+    .brand-text p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .session-count {
+      background: var(--surface);
+      color: var(--text-secondary);
+      padding: 8px 14px;
+      border-radius: var(--radius-pill);
+      font-size: 0.78rem;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+
+    .icon-btn {
+      width: 38px;
+      height: 38px;
+      min-width: 38px;
+      padding: 0;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      box-shadow: none;
+    }
+
+    .icon-btn:hover {
+      background: var(--surface-raised);
+      border-color: var(--border-strong);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-soft);
+    }
+
+    /* ---------- Layout grid ---------- */
+    .app-grid {
+      display: grid;
+      grid-template-columns: 1.35fr 1fr;
+      gap: clamp(14px, 2.5vw, 22px);
+      align-items: start;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      padding: clamp(20px, 4vw, 34px);
+    }
+
+    .panel-main {
+      text-align: center;
+    }
+
+    .panel-side {
+      display: flex;
+      flex-direction: column;
+      gap: clamp(14px, 2.5vw, 22px);
+    }
+
+    /* ---------- Status pill ---------- */
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      color: var(--text-secondary);
+      background: var(--bg-1);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: var(--radius-pill);
+      margin-bottom: clamp(20px, 4vw, 32px);
+    }
+
+    /* ---------- Timer (circular progress ring) ---------- */
+    .timer-container {
+      position: relative;
+      width: clamp(200px, 46vw, 280px);
+      aspect-ratio: 1 / 1;
+      margin: 0 auto clamp(24px, 4vw, 36px);
+    }
+
+    .timer-ring {
+      width: 100%;
+      height: 100%;
+      display: block;
+      transform: rotate(-90deg);
+    }
+
+    .ring-track {
+      fill: none;
+      stroke: var(--border);
+      stroke-width: 7;
+    }
+
+    .ring-progress {
+      fill: none;
+      stroke: var(--focus-strong);
+      stroke-width: 7;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s linear, stroke 0.4s var(--ease);
+    }
+
+    .timer-readout {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      text-align: center;
+    }
+
+    #timer {
+      font-size: clamp(2.4rem, 9vw, 3.6rem);
+      font-weight: 300;
+      font-family: 'SF Mono', 'Cascadia Code', 'Consolas', ui-monospace, monospace;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+      line-height: 1;
+      transition: color 0.3s var(--ease);
+    }
+
+    .timer-caption {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: var(--text-muted);
+    }
+
+    /* ---------- Buttons ---------- */
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    button {
+      background: var(--surface-raised);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      padding: 12px 22px;
+      font-size: 0.92rem;
+      border-radius: var(--radius-pill);
+      cursor: pointer;
+      transition: transform 0.15s var(--ease), box-shadow 0.15s var(--ease), background 0.15s var(--ease), border-color 0.15s var(--ease);
+      font-weight: 600;
+      min-width: 116px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-family: inherit;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-soft);
+      border-color: var(--border-strong);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button:focus-visible {
+      outline: 2px solid var(--focus-strong);
+      outline-offset: 2px;
+    }
+
+    #startBtn {
+      background: linear-gradient(135deg, var(--focus) 0%, #7C6BFF 100%);
+      border-color: transparent;
+      color: #FFFFFF;
+      box-shadow: 0 10px 24px -10px rgba(91, 127, 255, 0.65);
+    }
+
+    #startBtn:hover {
+      box-shadow: 0 12px 28px -8px rgba(91, 127, 255, 0.75);
+    }
+
+    button.secondary {
+      background: var(--surface);
+      color: var(--text-secondary);
+    }
+
+    button.danger {
+      background: rgba(229, 98, 106, 0.12);
+      color: #FF9DA3;
+      border-color: rgba(229, 98, 106, 0.25);
+    }
+
+    button.danger:hover {
+      background: rgba(229, 98, 106, 0.2);
+    }
+
+    /* ---------- Stats ---------- */
+    .stats-panel {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .stat-item {
+      text-align: left;
+      padding: 4px 0;
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.01em;
+    }
+
+    .stat-label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 2px;
+    }
+
+    .card-heading {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .card-heading .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--focus);
+    }
+
+    /* ---------- Daily History: date navigation ---------- */
+    .history-date-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .history-date-nav button {
+      width: auto;
+    }
+
+    .icon-btn.small {
+      width: 30px;
+      height: 30px;
+      min-width: 30px;
+      padding: 0;
+    }
+
+    button.small {
+      padding: 7px 14px;
+      font-size: 0.8rem;
+      min-width: 0;
+    }
+
+    .history-date-input {
+      flex: 1;
+      min-width: 128px;
+      padding: 7px 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-size: 0.85rem;
+      font-family: inherit;
+      color-scheme: dark;
+    }
+
+    html.theme-light .history-date-input {
+      color-scheme: light;
+    }
+
+    .history-date-input:focus {
+      outline: none;
+      border-color: var(--focus);
+    }
+
+    .history-badge {
+      font-size: 0.75rem;
+      color: var(--break-strong);
+      background: rgba(240, 168, 104, 0.12);
+      border: 1px solid rgba(240, 168, 104, 0.25);
+      padding: 7px 10px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 14px;
+      line-height: 1.4;
+    }
+
+    .new-day-btn {
+      width: 100%;
+      margin-top: 16px;
+      background: rgba(91, 127, 255, 0.1);
+      color: var(--focus-strong);
+      border: 1px solid rgba(91, 127, 255, 0.3);
+    }
+
+    .new-day-btn:hover {
+      background: rgba(91, 127, 255, 0.18);
+    }
+
+    /* ---------- Productivity chart ---------- */
+    .chart-card {
+      margin-top: clamp(14px, 2.5vw, 22px);
+    }
+
+    .chart-metric-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .chart-metric-tabs button {
+      width: auto;
+    }
+
+    .chart-tab {
+      padding: 8px 16px;
+      font-size: 0.82rem;
+      min-width: 0;
+      background: var(--bg-1);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+
+    .chart-tab.active {
+      background: var(--focus);
+      color: #FFFFFF;
+      border-color: transparent;
+    }
+
+    #historyChartContainer {
+      width: 100%;
+    }
+
+    .history-chart-svg {
+      width: 100%;
+      height: auto;
+      display: block;
+      overflow: visible;
+    }
+
+    .chart-axis-line {
+      stroke: var(--border);
+      stroke-width: 1;
+    }
+
+    .chart-axis-label {
+      fill: var(--text-muted);
+      font-size: 11px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    }
+
+    .chart-value-label {
+      fill: var(--text-secondary);
+      font-size: 10px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      font-weight: 600;
+    }
+
+    .chart-empty {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      text-align: center;
+      padding: 32px 12px;
+    }
+
+    /* ---------- Log ---------- */
+    #log {
+      text-align: left;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+
+    #log ul { list-style: none; }
+
+    #log li {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      font-size: 0.86rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    #log li:last-child { border-bottom: none; }
+
+    #log li::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--focus);
+      flex-shrink: 0;
+    }
+
+    #sessionLog:empty::after {
+      content: 'No sessions yet — press Start to begin.';
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    /* ---------- Settings Panel ---------- */
+    .settings-panel {
+      position: fixed;
+      top: 0;
+      right: -420px;
+      width: 400px;
+      max-width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      background: var(--bg-1);
+      padding: clamp(22px, 4vw, 32px);
+      overflow-y: auto;
+      transition: right 0.35s var(--ease);
+      z-index: 1000;
+      border-left: 1px solid var(--border);
+    }
+
+    .settings-panel.active { right: 0; }
+
+    .settings-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .settings-header h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .settings-group {
+      margin-bottom: 28px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .settings-group:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .settings-group h3 {
+      margin-bottom: 16px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--focus-strong);
+    }
+
+    .setting-item { margin-bottom: 14px; }
+    .setting-item:last-child { margin-bottom: 0; }
+
+    .setting-item label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .setting-item input[type="number"],
+    .setting-item input[type="text"],
+    .setting-item select {
+      width: 100%;
+      padding: 10px 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      font-family: inherit;
+    }
+
+    .setting-item input[type="number"]:focus,
+    .setting-item select:focus {
+      outline: none;
+      border-color: var(--focus);
+    }
+
+    .setting-item input[type="checkbox"] {
+      margin-right: 10px;
+      accent-color: var(--focus);
+      width: 16px;
+      height: 16px;
+      vertical-align: middle;
+    }
+
+    .setting-item label:has(input[type="checkbox"]) {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(6, 8, 12, 0.6);
+      backdrop-filter: blur(2px);
+      z-index: 999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s var(--ease);
+    }
+
+    .overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    /* ---------- Custom confirm dialog ---------- */
+    /* Layered above the settings panel (Reset All Data lives inside it) */
+    #confirmOverlay {
+      z-index: 1500;
+    }
+
+    .confirm-dialog {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.96);
+      width: min(90vw, 380px);
+      background: var(--surface-raised);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      padding: clamp(20px, 4vw, 26px);
+      z-index: 1501;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s var(--ease), transform 0.25s var(--ease);
+    }
+
+    .confirm-dialog.active {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+      pointer-events: all;
+    }
+
+    .confirm-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+    }
+
+    .confirm-message {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: 22px;
+    }
+
+    .confirm-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .confirm-actions button {
+      min-width: 96px;
+    }
+
+    .data-dialog {
+      width: min(92vw, 520px);
+    }
+
+    .data-textarea {
+      width: 100%;
+      height: 160px;
+      margin: 4px 0 18px;
+      padding: 10px 12px;
+      background: var(--bg-1);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-family: 'SF Mono', 'Cascadia Code', Consolas, ui-monospace, monospace;
+      font-size: 0.78rem;
+      line-height: 1.5;
+      resize: vertical;
+    }
+
+    .data-textarea:focus {
+      outline: none;
+      border-color: var(--focus);
+    }
+
+    /* ---------- Toast (legacy, kept for compatibility) ---------- */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--surface-raised);
+      color: var(--text-primary);
+      padding: 12px 20px;
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-card);
+      border: 1px solid var(--border);
+      z-index: 1001;
+      opacity: 0;
+      transition: opacity 0.3s var(--ease);
+    }
+
+    .toast.show { opacity: 1; }
+
+    /* ---------- Notification ---------- */
+    .notification {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-12px);
+      background: var(--surface-raised);
+      color: var(--text-primary);
+      padding: 14px 18px;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-card);
+      z-index: 1002;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      max-width: min(90vw, 380px);
+      width: max-content;
+      border: 1px solid var(--border-strong);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s var(--ease), transform 0.3s var(--ease);
+    }
+
+    .notification.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+      pointer-events: auto;
+    }
+
+    .notification.hide {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-12px);
+    }
+
+    .notification-icon {
+      font-size: 1.3rem;
+      flex-shrink: 0;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .notification-content { flex-grow: 1; }
+
+    .notification-title {
+      font-weight: 700;
+      margin-bottom: 2px;
+      font-size: 0.92rem;
+    }
+
+    .notification-message {
+      font-size: 0.84rem;
+      color: var(--text-secondary);
+    }
+
+    .notification-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 4px;
+      line-height: 1;
+      transition: color 0.2s;
+    }
+
+    .notification-close:hover { color: var(--text-primary); }
+
+    .notification-focus { border-left: 3px solid var(--focus); }
+    .notification-break { border-left: 3px solid var(--break); }
+    .notification-info { border-left: 3px solid var(--focus-strong); }
+    .notification-warning { border-left: 3px solid var(--warning); }
+    .notification-error { border-left: 3px solid var(--danger); }
+    .notification-success { border-left: 3px solid var(--success); }
+
+    /* ---------- Wake-lock indicator ---------- */
+    .wake-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .wake-indicator .wake-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      transition: background 0.3s var(--ease);
+    }
+
+    .wake-indicator.active .wake-dot {
+      background: var(--success);
+      box-shadow: 0 0 0 0 rgba(61, 220, 151, 0.5);
+      animation: pulseRing 2s infinite;
+    }
+
+    .wake-indicator.active { color: var(--success); }
+
+    /* ---------- Responsive ---------- */
+
+    /* Large desktop: a little extra breathing room */
+    @media (min-width: 1400px) {
+      .app { max-width: 980px; }
+    }
+
+    /* Tablet / small desktop: still two columns, tighter gaps */
+    @media (max-width: 900px) {
+      .app-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .panel-side {
+        flex-direction: row;
+      }
+
+      .panel-side .card { flex: 1; }
+    }
+
+    /* Phones */
+    @media (max-width: 640px) {
+      body { padding: 12px; align-items: flex-start; }
+
+      .app { max-width: 100%; }
+
+      .card {
+        border-radius: var(--radius-md);
+        padding: 20px 16px;
+      }
+
+      .panel-side { flex-direction: column; }
+
+      .buttons { flex-direction: column; }
+
+      button { width: 100%; }
+
+      .settings-panel {
+        width: 100%;
+        right: -100%;
+      }
+
+      .notification {
+        top: 12px;
+        max-width: calc(100vw - 24px);
+      }
+
+      .brand-text p { display: none; }
+
+      .wake-indicator span:not(.wake-dot) {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+      }
+
+      .wake-indicator {
+        width: 20px;
+        height: 20px;
+        justify-content: center;
+      }
+    }
+
+    /* Very small phones */
+    @media (max-width: 360px) {
+      #timer { font-size: 2rem; }
+      .timer-container { width: clamp(160px, 52vw, 200px); }
+      .session-count { padding: 6px 10px; font-size: 0.7rem; }
+      .brand-mark { width: 34px; height: 34px; }
+    }
+
+    /* Short / landscape phones: reclaim vertical space */
+    @media (max-height: 560px) and (orientation: landscape) {
+      body { align-items: flex-start; padding: 10px; }
+      .app-header { margin-bottom: 10px; }
+      .timer-container { width: clamp(140px, 22vh, 200px); margin-bottom: 12px; }
+      #timer { font-size: clamp(1.8rem, 6vh, 2.6rem); }
+      .card { padding: 16px; }
+      .app-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* Respect reduced-motion preferences */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+  </style>
+</head>
+<body>
+<div class="app">
+<header class="app-header">
+<div class="brand">
+<div class="brand-mark">
+<svg fill="none" height="20" viewbox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 3V6" stroke="currentColor" stroke-linecap="round" stroke-width="2"></path>
+<path d="M12 18V21" stroke="currentColor" stroke-linecap="round" stroke-width="2"></path>
+<path d="M3 12H6" stroke="currentColor" stroke-linecap="round" stroke-width="2"></path>
+<path d="M18 12H21" stroke="currentColor" stroke-linecap="round" stroke-width="2"></path>
+<circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2"></circle>
+</svg>
+</div>
+<div class="brand-text">
+<h1>DeepFlow</h1>
+<p>Focus &amp; break timer</p>
+</div>
+</div>
+<div class="header-actions">
+<div class="wake-indicator" id="wakeIndicator">
+<span class="wake-dot"></span>
+<span id="wakeIndicatorText">Screen may sleep</span>
+</div>
+<div class="session-count" id="sessionCount">Session 1</div>
+<button aria-label="Settings" class="icon-btn" id="settingsBtn">
+<svg fill="none" height="18" viewbox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+<path d="M19.4 15C19.2669 15.3016 19.227 15.6362 19.285 15.9606C19.343 16.285 19.4966 16.5844 19.725 16.8187C19.9553 17.0549 20.2502 17.2155 20.5676 17.2789C20.885 17.3423 21.2096 17.3056 21.5 17.1737C21.8998 17.0001 22.3433 16.9564 22.7683 17.0484C23.1933 17.1404 23.5785 17.3636 23.866 17.685C24.1553 18.0089 24.3303 18.4144 24.3657 18.8408C24.4011 19.2672 24.2953 19.6915 24.065 20.05C23.8346 20.4085 23.4923 20.6818 23.09 20.8275C22.6877 20.9732 22.2476 20.9834 21.8384 20.8565C21.4292 20.7296 21.0736 20.4729 20.825 20.125" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+<path d="M4.60002 15C4.73312 15.3016 4.77299 15.6362 4.715 15.9606C4.657 16.285 4.50344 16.5844 4.27502 16.8187C4.04475 17.0549 3.74978 17.2155 3.43238 17.2789C3.11499 17.3423 2.79041 17.3056 2.50002 17.1737C2.10024 17.0001 1.65671 16.9564 1.23172 17.0484C0.806731 17.1404 0.421487 17.3636 0.134019 17.685C-0.155252 18.0089 -0.330281 18.4144 -0.365685 18.8408C-0.401089 19.2672 -0.295304 19.6915 -0.065018 20.05C0.165268 20.4085 0.507627 20.6818 0.909895 20.8275C1.31216 20.9732 1.75226 20.9834 2.16146 20.8565C2.57066 20.7296 2.92625 20.4729 3.17502 20.125" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+<path d="M4.60002 9C4.73312 8.69842 4.77299 8.36379 4.715 8.03937C4.657 7.71495 4.50344 7.41557 4.27502 7.18134C4.04475 6.9451 3.74978 6.78452 3.43238 6.72112C3.11499 6.65772 2.79041 6.69439 2.50002 6.8263C2.10024 6.99989 1.65671 7.04359 1.23172 6.9516C0.806731 6.85961 0.421487 6.63637 0.134019 6.315C-0.155252 5.99111 -0.330281 5.58557 -0.365685 5.15918C-0.401089 4.73279 -0.295304 4.30854 -0.065018 3.95C0.165268 3.59146 0.507627 3.31816 0.909895 3.17248C1.31216 3.0268 1.75226 3.01664 2.16146 3.1435C2.57066 3.27036 2.92625 3.52714 3.17502 3.875" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+<path d="M19.4 9C19.2669 8.69842 19.227 8.36379 19.285 8.03937C19.343 7.71495 19.4966 7.41557 19.725 7.18134C19.9553 6.9451 20.2502 6.78452 20.5676 6.72112C20.885 6.65772 21.2096 6.69439 21.5 6.8263C21.8998 6.99989 22.3433 7.04359 22.7683 6.9516C23.1933 6.85961 23.5785 6.63637 23.866 6.315C24.1553 18.0089 24.3303 18.4144 24.3657 18.8408C24.4011 19.2672 24.2953 19.6915 24.065 20.05C23.8346 20.4085 23.4923 20.6818 23.09 20.8275C22.6877 20.9732 22.2476 20.9834 21.8384 20.8565C21.4292 20.7296 21.0736 20.4729 20.825 20.125" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+</div>
+</header>
+
+<div class="app-grid">
+<section class="card panel-main">
+<div class="status-pill" id="status">Ready to Focus</div>
+<div class="timer-container">
+<svg class="timer-ring" viewbox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+<circle class="ring-track" cx="100" cy="100" r="90"></circle>
+<circle class="ring-progress" cx="100" cy="100" id="ringProgress" r="90"></circle>
+</svg>
+<div class="timer-readout">
+<div id="timer">30:00</div>
+<div class="timer-caption" id="timerCaption">remaining</div>
+</div>
+</div>
+<div class="buttons">
+<button id="startBtn" onclick="startTimer()">
+<svg fill="none" height="16" viewbox="0 0 16 16" width="16" xmlns="http://www.w3.org/2000/svg">
+<path d="M3 2L13 8L3 14V2Z" fill="currentColor"></path>
+</svg>
+        Start
+      </button>
+<button id="pauseBtn" onclick="pauseTimer()">
+<svg fill="none" height="16" viewbox="0 0 16 16" width="16" xmlns="http://www.w3.org/2000/svg">
+<rect fill="currentColor" height="12" width="4" x="4" y="2"></rect>
+<rect fill="currentColor" height="12" width="4" x="10" y="2"></rect>
+</svg>
+        Pause
+      </button>
+<button class="secondary" onclick="resetTimer()">
+<svg fill="none" height="16" viewbox="0 0 16 16" width="16" xmlns="http://www.w3.org/2000/svg">
+<path d="M13.5 8C13.5 9.15761 13.1293 10.2837 12.4388 11.2095C11.7482 12.1352 10.7717 12.8118 9.65165 13.1384C8.53161 13.465 7.32569 13.4248 6.22847 13.0236C5.13125 12.6224 4.20095 11.8826 3.57403 10.9137C2.94711 9.94482 2.65808 8.80061 2.75372 7.65366C2.84935 6.50671 3.32399 5.42234 4.11091 4.55544C4.89783 3.68855 5.95472 3.08669 7.12218 2.83866C8.28964 2.59063 9.50384 2.71046 10.5938 3.18063" stroke="currentColor" stroke-linecap="round" stroke-width="2"></path>
+<path d="M13.5 3V7H9.5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+        Reset
+      </button>
+<button class="secondary" id="skipBreakBtn" onclick="skipBreak()" style="display: none;">
+<svg fill="none" height="16" viewbox="0 0 16 16" width="16" xmlns="http://www.w3.org/2000/svg">
+<path d="M13 3L3 13M3 3L13 13" stroke="currentColor" stroke-linecap="round" stroke-width="2"></path>
+</svg>
+        Skip Break
+      </button>
+</div>
+</section>
+
+<aside class="panel-side">
+<div class="card" id="historyCard">
+<div class="card-heading"><span class="dot"></span>Daily History</div>
+<div class="history-date-nav">
+<button aria-label="Previous day" class="icon-btn small" id="historyPrevBtn">
+<svg fill="none" height="14" viewbox="0 0 16 16" width="14" xmlns="http://www.w3.org/2000/svg">
+<path d="M10 3L5 8L10 13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+<input class="history-date-input" id="historyDateInput" type="date"/>
+<button aria-label="Next day" class="icon-btn small" id="historyNextBtn">
+<svg fill="none" height="14" viewbox="0 0 16 16" width="14" xmlns="http://www.w3.org/2000/svg">
+<path d="M6 3L11 8L6 13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+<button class="secondary small" id="historyTodayBtn">Today</button>
+</div>
+<div class="history-badge" id="historyBadge" style="display:none;"></div>
+<div class="stats-panel">
+<div class="stat-item">
+<div class="stat-value" id="statFocusSessions">0</div>
+<div class="stat-label">Focus Sessions</div>
+</div>
+<div class="stat-item">
+<div class="stat-value" id="statFocusTime">0h 0m</div>
+<div class="stat-label">Focus Time</div>
+</div>
+<div class="stat-item">
+<div class="stat-value" id="statBreakSessions">0</div>
+<div class="stat-label">Break Sessions</div>
+</div>
+<div class="stat-item">
+<div class="stat-value" id="statBreakTime">0h 0m</div>
+<div class="stat-label">Break Time</div>
+</div>
+<div class="stat-item">
+<div class="stat-value" id="statCycles">0</div>
+<div class="stat-label">Cycles Completed</div>
+</div>
+<div class="stat-item">
+<div class="stat-value" id="statAvgFocus">0m</div>
+<div class="stat-label">Avg Focus Session</div>
+</div>
+</div>
+<button class="new-day-btn" id="newDayBtn">
+<svg fill="none" height="16" viewbox="0 0 16 16" width="16" xmlns="http://www.w3.org/2000/svg">
+<path d="M8 3V13M3 8H13" stroke="currentColor" stroke-linecap="round" stroke-width="2"></path>
+</svg>
+        Start New Day
+      </button>
+</div>
+<div class="card" id="log">
+<div class="card-heading"><span class="dot"></span>Session Log</div>
+<ul id="sessionLog"></ul>
+</div>
+</aside>
+</div>
+<section class="card chart-card">
+<div class="card-heading"><span class="dot"></span>Productivity Trends</div>
+<div class="chart-metric-tabs" id="chartMetricTabs">
+<button class="chart-tab active" data-metric="focusMinutes">Focus Minutes</button>
+<button class="chart-tab" data-metric="focusSessions">Focus Sessions</button>
+<button class="chart-tab" data-metric="cycles">Cycles</button>
+</div>
+<div id="historyChartContainer"></div>
+</section>
+</div>
+<!-- Settings Panel -->
+<div class="overlay" id="settingsOverlay"></div>
+<div class="settings-panel" id="settingsPanel">
+<div class="settings-header">
+<h2>Settings</h2>
+<button class="icon-btn" onclick="closeSettings()">
+<svg fill="none" height="18" viewbox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg">
+<path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+</div>
+<div class="settings-group">
+<h3>Timer Settings</h3>
+<div class="setting-item">
+<label for="focusDuration">Focus Duration (minutes)</label>
+<input id="focusDuration" max="120" min="1" type="number" value="30"/>
+</div>
+<div class="setting-item">
+<label for="shortBreakDuration">Short Break Duration (minutes)</label>
+<input id="shortBreakDuration" max="30" min="1" type="number" value="5"/>
+</div>
+<div class="setting-item">
+<label for="longBreakDuration">Long Break Duration (minutes)</label>
+<input id="longBreakDuration" max="60" min="1" type="number" value="15"/>
+</div>
+<div class="setting-item">
+<label for="lunchBreakDuration">Lunch Break Duration (minutes)</label>
+<input id="lunchBreakDuration" max="120" min="1" type="number" value="60"/>
+</div>
+<div class="setting-item">
+<label for="sessionsBeforeLongBreak">Sessions before Long Break</label>
+<input id="sessionsBeforeLongBreak" max="10" min="1" type="number" value="4"/>
+</div>
+<div class="setting-item">
+<label for="sessionsBeforeLunch">Sessions before Lunch</label>
+<input id="sessionsBeforeLunch" max="20" min="1" type="number" value="8"/>
+</div>
+</div>
+<div class="settings-group">
+<h3>Appearance</h3>
+<div class="setting-item">
+<label>
+<input checked="" id="darkModeToggle" type="checkbox"/>
+          Dark Mode
+        </label>
+</div>
+<div class="setting-item">
+<label>
+<input checked="" id="pulseTimerToggle" type="checkbox"/>
+          Pulse Timer Animation
+        </label>
+</div>
+</div>
+<div class="settings-group">
+<h3>Behavior</h3>
+<div class="setting-item">
+<label>
+<input checked="" id="keepScreenAwakeToggle" type="checkbox"/>
+          Always Keep Screen Awake
+        </label>
+</div>
+<p style="font-size: 0.78rem; color: var(--text-muted); margin-top: -6px;">When off, the screen only stays awake while a timer is actively running.</p>
+</div>
+<div class="settings-group">
+<h3>Notifications</h3>
+<div class="setting-item">
+<label>
+<input checked="" id="soundNotificationsToggle" type="checkbox"/>
+          Sound Notifications
+        </label>
+</div>
+<div class="setting-item">
+<label>
+<input id="desktopNotificationsToggle" type="checkbox"/>
+          Desktop Notifications
+        </label>
+</div>
+</div>
+<div class="settings-group">
+<h3>Data</h3>
+<div class="setting-item">
+<button class="secondary" onclick="exportData()" style="width: 100%;">Export Data</button>
+</div>
+<div class="setting-item">
+<button class="secondary" onclick="importData()" style="width: 100%;">Import Data</button>
+</div>
+<div class="setting-item">
+<button class="danger" onclick="resetData()" style="width: 100%;">Reset All Data</button>
+</div>
+</div>
+</div>
+<!-- Toast Notification -->
+<div class="toast" id="toast"></div>
+<!-- Notification System -->
+<div class="notification" id="notification">
+  <div class="notification-icon" id="notificationIcon">ℹ️</div>
+  <div class="notification-content">
+    <div class="notification-title" id="notificationTitle">Notification</div>
+    <div class="notification-message" id="notificationMessage">This is a notification message</div>
+  </div>
+  <button class="notification-close" id="notificationClose">×</button>
+</div>
+<!-- Custom Confirm Dialog (replaces window.confirm, which browsers can
+     silently block or hang on inside sandboxed preview iframes) -->
+<div class="overlay" id="confirmOverlay"></div>
+<div class="confirm-dialog" id="confirmDialog" role="alertdialog">
+  <div class="confirm-title" id="confirmTitle">Are you sure?</div>
+  <div class="confirm-message" id="confirmMessage">This action cannot be undone.</div>
+  <div class="confirm-actions">
+    <button class="secondary" id="confirmCancelBtn">Cancel</button>
+    <button class="danger" id="confirmOkBtn">Confirm</button>
+  </div>
+</div>
+<!-- Export Fallback Dialog (a manual backup, in case the automatic file
+     download is silently blocked, e.g. in a sandboxed preview iframe) -->
+<div class="overlay" id="exportOverlay"></div>
+<div class="confirm-dialog data-dialog" id="exportDialog" role="dialog">
+  <div class="confirm-title">Export Data</div>
+  <div class="confirm-message">A download should have started automatically. If it didn't, copy the text below and save it yourself as a <code>.json</code> file.</div>
+  <textarea class="data-textarea" id="exportTextarea" readonly=""></textarea>
+  <div class="confirm-actions">
+    <button class="secondary" id="exportCopyBtn">Copy to Clipboard</button>
+    <button id="exportCloseBtn">Done</button>
+  </div>
+</div>
+<script>
+
+    // Self-contained notification icon (inline SVG data URI - no network request)
+    const NOTIFICATION_ICON = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">' +
+      '<circle cx="32" cy="32" r="30" fill="#5B7FFF"/>' +
+      '<text x="32" y="42" font-size="30" text-anchor="middle" fill="currentColor">\u{1F9E0}</text>' +
+      '</svg>'
+    );
+
+    // Timer Variables
+    let timerInterval;
+    let isTimerRunning = false;
+    let totalTime = 30 * 60; // 30 minutes in seconds
+    let timeLeft = totalTime;
+    let currentSession = 1;
+    let currentMode = 'focus';
+
+    // ------------------------------------------------------------------
+    // Daily history: sessions are recorded per calendar day instead of as
+    // one continuous lifetime total, so productivity can be tracked and
+    // compared day over day.
+    //   dailyHistory: { "YYYY-MM-DD": { sessions: [ {type, breakType,
+    //                   durationSeconds, completedAt} ] } }
+    //   activeDate:   the day newly-completed sessions are recorded
+    //                 against (only changes via the explicit "New Day"
+    //                 action - never silently, e.g. just because the
+    //                 real-world calendar date changed while the tab
+    //                 was closed).
+    //   viewingDate:  the day currently displayed in the history/stats
+    //                 UI. Defaults to activeDate, but browsing history
+    //                 (date picker, prev/next, clicking a chart bar)
+    //                 changes ONLY this, never activeDate.
+    // ------------------------------------------------------------------
+    let dailyHistory = {};
+    let activeDate = getDateKey();
+    let viewingDate = activeDate;
+    let chartMetric = 'focusMinutes'; // 'focusMinutes' | 'focusSessions' | 'cycles'
+
+    function getDateKey(date = new Date()) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    // ------------------------------------------------------------------
+    // Resilient storage layer.
+    // localStorage can throw (not just return null) in restricted contexts
+    // such as sandboxed preview iframes, some privacy-mode browsers, or
+    // strict Permissions-Policy setups. An uncaught throw there would abort
+    // whatever function called it, silently breaking Settings/Reset/etc.
+    // Every storage access below goes through this wrapper, which falls
+    // back to an in-memory store for the current session so the app keeps
+    // working even when persistence itself isn't available.
+    // ------------------------------------------------------------------
+    const memoryStorage = {};
+    let storageBlocked = false;
+    let storageWarningShown = false;
+
+    function warnStorageBlockedOnce() {
+      if (storageWarningShown) return;
+      storageWarningShown = true;
+      console.warn('DeepFlow: local storage is unavailable in this environment (often caused by a sandboxed preview/iframe or strict privacy settings). Settings and progress will only be kept for this browser tab session.');
+      showNotification(
+        'Limited Storage Mode',
+        "This environment doesn't allow saving data permanently, so your settings and progress will reset if you reload or close this tab.",
+        'warning',
+        6000
+      );
+    }
+
+    function storageGet(key) {
+      if (!storageBlocked) {
+        try {
+          return window.localStorage.getItem(key);
+        } catch (e) {
+          storageBlocked = true;
+          warnStorageBlockedOnce();
+        }
+      }
+      return Object.prototype.hasOwnProperty.call(memoryStorage, key) ? memoryStorage[key] : null;
+    }
+
+    function storageSet(key, value) {
+      if (!storageBlocked) {
+        try {
+          window.localStorage.setItem(key, value);
+          return;
+        } catch (e) {
+          storageBlocked = true;
+          warnStorageBlockedOnce();
+        }
+      }
+      memoryStorage[key] = value;
+    }
+
+    function storageRemove(key) {
+      if (!storageBlocked) {
+        try {
+          window.localStorage.removeItem(key);
+          return;
+        } catch (e) {
+          storageBlocked = true;
+          warnStorageBlockedOnce();
+        }
+      }
+      delete memoryStorage[key];
+    }
+
+    // Settings defaults
+    const DEFAULT_SETTINGS = {
+      focusDuration: 30,
+      shortBreakDuration: 5,
+      longBreakDuration: 15,
+      lunchBreakDuration: 60,
+      sessionsBeforeLongBreak: 4,
+      sessionsBeforeLunch: 8,
+      darkMode: true,
+      pulseTimer: true,
+      keepScreenAwake: true,
+      soundNotifications: true,
+      desktopNotifications: false
+    };
+
+    let settings = { ...DEFAULT_SETTINGS };
+
+    // Break patterns based on session number
+    const breakPattern = {
+      1: 'short',
+      2: 'short',
+      3: 'short',
+      4: 'long',
+      5: 'short',
+      6: 'short',
+      7: 'short',
+      8: 'lunch',
+      9: 'short',
+      10: 'short',
+      11: 'short',
+      12: 'long',
+      13: 'short',
+      14: 'short',
+      15: 'short'
+    };
+
+    // Notification System
+    function showNotification(title, message, type = 'info', duration = 3000) {
+      const notification = document.getElementById('notification');
+      const notificationIcon = document.getElementById('notificationIcon');
+      const notificationTitle = document.getElementById('notificationTitle');
+      const notificationMessage = document.getElementById('notificationMessage');
+      
+      // Set content
+      notificationTitle.textContent = title;
+      notificationMessage.textContent = message;
+      
+      // Set icon based on type
+      let icon = 'ℹ️';
+      switch(type) {
+        case 'focus':
+          icon = '🧠';
+          break;
+        case 'break':
+          icon = '☕';
+          break;
+        case 'warning':
+          icon = '⚠️';
+          break;
+        case 'error':
+          icon = '❌';
+          break;
+        case 'success':
+          icon = '✅';
+          break;
+      }
+      notificationIcon.textContent = icon;
+      
+      // Set styling based on type
+      notification.className = 'notification';
+      notification.classList.add(`notification-${type}`);
+      
+      // Show notification
+      notification.classList.remove('hide');
+      notification.classList.add('show');
+      
+      // Auto-hide after duration
+      if (duration > 0) {
+        setTimeout(() => {
+          hideNotification();
+        }, duration);
+      }
+      
+      // Play sound if enabled
+      if (settings.soundNotifications) {
+        playNotificationSound();
+      }
+    }
+    
+    function hideNotification() {
+      const notification = document.getElementById('notification');
+      notification.classList.remove('show');
+      notification.classList.add('hide');
+    }
+    
+    // Setup notification close button
+    document.getElementById('notificationClose').addEventListener('click', hideNotification);
+
+    // ------------------------------------------------------------------
+    // Custom confirm dialog. window.confirm() is unreliable inside
+    // sandboxed preview iframes (no "allow-modals"): browsers may silently
+    // ignore the call (returning false with no dialog and no error) or, in
+    // some cases, hang the call entirely. This dialog is plain DOM/CSS, so
+    // it always works regardless of iframe sandboxing.
+    // Usage: showConfirm('Title', 'Message').then(confirmed => { ... });
+    // ------------------------------------------------------------------
+    function showConfirm(title, message) {
+      return new Promise((resolve) => {
+        const overlay = document.getElementById('confirmOverlay');
+        const dialog = document.getElementById('confirmDialog');
+        document.getElementById('confirmTitle').textContent = title;
+        document.getElementById('confirmMessage').textContent = message;
+
+        const okBtn = document.getElementById('confirmOkBtn');
+        const cancelBtn = document.getElementById('confirmCancelBtn');
+
+        const cleanup = (result) => {
+          overlay.classList.remove('active');
+          dialog.classList.remove('active');
+          okBtn.removeEventListener('click', onOk);
+          cancelBtn.removeEventListener('click', onCancel);
+          overlay.removeEventListener('click', onCancel);
+          resolve(result);
+        };
+        const onOk = () => cleanup(true);
+        const onCancel = () => cleanup(false);
+
+        okBtn.addEventListener('click', onOk);
+        cancelBtn.addEventListener('click', onCancel);
+        overlay.addEventListener('click', onCancel);
+
+        overlay.classList.add('active');
+        dialog.classList.add('active');
+      });
+    }
+
+    // Timer Functions
+    function startTimer() {
+      if (isTimerRunning) return;
+      
+      isTimerRunning = true;
+      evaluateWakeLockPolicy(true); // user gesture - worth retrying even if previously denied
+      updateDisplay();
+      
+      // Show notification when timer starts
+      if (currentMode === 'focus') {
+        showNotification('Focus Session Started', 'Time to focus! Get productive!', 'focus', 3000);
+        notifyUser('Time to focus! Get productive!', 'Focus Session Started');
+      } else {
+        const breakType = getCurrentBreakType();
+        let breakMessage = 'Time for a break! Relax and recharge.';
+        if (breakType === 'long') {
+          breakMessage = 'Time for a long break! Rest well.';
+        } else if (breakType === 'lunch') {
+          breakMessage = 'Time for lunch! Enjoy your meal.';
+        }
+        showNotification('Break Started', breakMessage, 'break', 3000);
+        notifyUser(breakMessage, 'Break Started');
+      }
+
+      timerInterval = setInterval(() => {
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          isTimerRunning = false;
+          evaluateWakeLockPolicy();
+          logSession(`${getModeLabel(currentMode)} completed`);
+
+          // Record this completed session against the active day BEFORE
+          // handleSessionEnd() flips currentMode/totalTime for the next one.
+          recordCompletedSession(
+            currentMode === 'focus' ? 'focus' : 'break',
+            currentMode === 'break' ? getCurrentBreakType() : null,
+            totalTime
+          );
+          
+          // Show notification when timer ends
+          if (currentMode === 'focus') {
+            showNotification('Focus Session Completed', 'Great job! Time for a break.', 'success', 3000);
+            notifyUser('Great job! Time for a break.', 'Focus Session Completed');
+          } else {
+            showNotification('Break Completed', 'Break time is over. Ready to focus again?', 'info', 3000);
+            notifyUser('Break time is over. Ready to focus again?', 'Break Completed');
+          }
+          
+          handleSessionEnd();
+        } else {
+          timeLeft--;
+          updateDisplay();
+          
+          // Pulse animation when time is running out
+          if (timeLeft <= 60 && settings.pulseTimer) {
+            document.getElementById('timer').style.animation = 'pulse 1s infinite';
+          }
+        }
+      }, 1000);
+
+      document.getElementById('status').textContent = getModeLabel(currentMode);
+      logSession(`${getModeLabel(currentMode)} started`);
+      updateSkipBreakButton();
+    }
+
+    function pauseTimer() {
+      if (!isTimerRunning) return;
+      
+      clearInterval(timerInterval);
+      isTimerRunning = false;
+      evaluateWakeLockPolicy();
+      updateDisplay();
+      document.getElementById('status').textContent = 'Paused';
+      document.getElementById('timer').style.animation = 'none';
+      
+      logSession('Timer paused');
+      showNotification('Timer Paused', 'Your session has been paused.', 'warning', 2000);
+    }
+
+    function resetTimer() {
+      clearInterval(timerInterval);
+      isTimerRunning = false;
+      evaluateWakeLockPolicy();
+      document.getElementById('timer').style.animation = 'none';
+      
+      // Reset to current mode's duration
+      if (currentMode === 'focus') {
+        totalTime = settings.focusDuration * 60;
+      } else {
+        const breakType = getCurrentBreakType();
+        switch(breakType) {
+          case 'short':
+            totalTime = settings.shortBreakDuration * 60;
+            break;
+          case 'long':
+            totalTime = settings.longBreakDuration * 60;
+            break;
+          case 'lunch':
+            totalTime = settings.lunchBreakDuration * 60;
+            break;
+        }
+      }
+      
+      timeLeft = totalTime;
+      updateDisplay();
+      document.getElementById('status').textContent = currentMode === 'focus' ? 'Ready to Focus' : 'Ready for a Break';
+      updateSkipBreakButton();
+      saveState();
+      
+      logSession('Timer reset');
+      showNotification('Timer Reset', 'The timer has been reset.', 'info', 2000);
+    }
+
+    function skipBreak() {
+      if (currentMode !== 'break') return;
+      
+      clearInterval(timerInterval);
+      isTimerRunning = false;
+      evaluateWakeLockPolicy();
+
+      // Credit only the portion of the break actually taken, not the full
+      // configured duration, since it was cut short.
+      recordCompletedSession('break', getCurrentBreakType(), totalTime - timeLeft);
+
+      handleSessionEnd();
+      logSession('Break skipped');
+      showNotification('Break Skipped', 'You skipped your break time.', 'warning', 2000);
+    }
+
+    function updateSkipBreakButton() {
+      const skipBtn = document.getElementById('skipBreakBtn');
+      if (currentMode === 'break') {
+        skipBtn.style.display = 'block';
+      } else {
+        skipBtn.style.display = 'none';
+      }
+    }
+
+    function getCurrentBreakType() {
+      return breakPattern[currentSession] || 'short';
+    }
+
+    // Keeps the on-screen timer in sync with whatever duration settings
+    // currently apply, without requiring a separate manual Reset. Only
+    // touches the timer while it's idle/paused - an already-running
+    // countdown finishes out on the duration it started with, and simply
+    // picks up the new duration the next time it resets or a new
+    // session/break begins (so a live session is never abruptly disrupted).
+    function syncTimerWithSettings() {
+      if (isTimerRunning) return;
+
+      let newTotal;
+      if (currentMode === 'focus') {
+        newTotal = settings.focusDuration * 60;
+      } else {
+        switch (getCurrentBreakType()) {
+          case 'long':
+            newTotal = settings.longBreakDuration * 60;
+            break;
+          case 'lunch':
+            newTotal = settings.lunchBreakDuration * 60;
+            break;
+          default:
+            newTotal = settings.shortBreakDuration * 60;
+        }
+      }
+
+      if (newTotal !== totalTime) {
+        totalTime = newTotal;
+        timeLeft = newTotal;
+        updateDisplay();
+        saveState();
+      }
+    }
+
+    // Live preview: updates the visible timer as the user types a new
+    // duration into the settings panel, before it's even saved. Only
+    // applies while idle (same reasoning as syncTimerWithSettings - never
+    // disrupt a running countdown), and only for whichever duration field
+    // is actually relevant to the mode currently showing on the timer.
+    function previewDurationInput() {
+      if (isTimerRunning) return;
+
+      let newTotal;
+      if (currentMode === 'focus') {
+        newTotal = clampSetting(document.getElementById('focusDuration').value, 1, 120, settings.focusDuration) * 60;
+      } else {
+        switch (getCurrentBreakType()) {
+          case 'long':
+            newTotal = clampSetting(document.getElementById('longBreakDuration').value, 1, 60, settings.longBreakDuration) * 60;
+            break;
+          case 'lunch':
+            newTotal = clampSetting(document.getElementById('lunchBreakDuration').value, 1, 120, settings.lunchBreakDuration) * 60;
+            break;
+          default:
+            newTotal = clampSetting(document.getElementById('shortBreakDuration').value, 1, 30, settings.shortBreakDuration) * 60;
+        }
+      }
+
+      if (newTotal !== totalTime) {
+        totalTime = newTotal;
+        timeLeft = newTotal;
+        updateDisplay();
+      }
+    }
+
+    // Circumference of the progress ring, computed once the SVG exists
+    let ringCircumference = 0;
+
+    function initRing() {
+      const ring = document.getElementById('ringProgress');
+      if (ring && ring.getTotalLength) {
+        ringCircumference = ring.getTotalLength();
+        ring.style.strokeDasharray = `${ringCircumference}`;
+        ring.style.strokeDashoffset = '0';
+      }
+    }
+
+    function updateDisplay() {
+      const mins = Math.floor(timeLeft / 60);
+      const secs = timeLeft % 60;
+      document.getElementById('timer').textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+      const progress = totalTime > 0 ? ((totalTime - timeLeft) / totalTime) * 100 : 0;
+      const ring = document.getElementById('ringProgress');
+      const timerEl = document.getElementById('timer');
+      const caption = document.getElementById('timerCaption');
+
+      if (ring && ringCircumference > 0) {
+        const offset = ringCircumference * (progress / 100);
+        ring.style.strokeDashoffset = `${offset}`;
+      }
+
+      if (currentMode === 'focus') {
+        if (ring) ring.style.stroke = 'var(--focus-strong)';
+        timerEl.style.color = 'var(--focus-strong)';
+        if (caption) caption.textContent = isTimerRunning ? 'focusing' : 'remaining';
+      } else {
+        if (ring) ring.style.stroke = 'var(--break-strong)';
+        timerEl.style.color = 'var(--break-strong)';
+        if (caption) caption.textContent = isTimerRunning ? 'on break' : 'remaining';
+      }
+    }
+
+    function handleSessionEnd() {
+      if (currentMode === 'focus') {
+        currentMode = 'break';
+        const breakType = getCurrentBreakType();
+        
+        switch(breakType) {
+          case 'short':
+            totalTime = settings.shortBreakDuration * 60;
+            break;
+          case 'long':
+            totalTime = settings.longBreakDuration * 60;
+            break;
+          case 'lunch':
+            totalTime = settings.lunchBreakDuration * 60;
+            break;
+        }
+        
+        if (currentSession < 16) {
+          document.getElementById('sessionCount').textContent = `Session ${currentSession + 1}`;
+        } else {
+          document.getElementById('sessionCount').textContent = 'Session 1';
+        }
+      } else {
+        currentMode = 'focus';
+        totalTime = settings.focusDuration * 60;
+        
+        if (currentSession < 16) {
+          currentSession++;
+        } else {
+          currentSession = 1;
+        }
+      }
+      
+      timeLeft = totalTime;
+      updateDisplay();
+      saveState();
+      
+      setTimeout(() => {
+        startTimer();
+      }, 1000);
+    }
+
+    function getModeLabel(mode) {
+      if (mode === 'focus') {
+        return '🧠 Focus Time';
+      } else {
+        const breakType = getCurrentBreakType();
+        switch(breakType) {
+          case 'short':
+            return `☕ Short Break (${settings.shortBreakDuration} min)`;
+          case 'long':
+            return `🛌 Long Break (${settings.longBreakDuration} min)`;
+          case 'lunch':
+            return `🍱 Lunch Break (${settings.lunchBreakDuration} min)`;
+          default:
+            return `☕ Break (${settings.shortBreakDuration} min)`;
+        }
+      }
+    }
+
+    // Common Functions
+    let wakeLockSentinel = null;
+    // null = not yet tried / working normally, 'blocked' = denied by the
+    // browser or environment (e.g. Permissions-Policy in a sandboxed
+    // preview), 'unsupported' = the API doesn't exist in this browser at all
+    let wakeLockUnavailableReason = null;
+    let wakeLockWarningShown = false;
+
+    function updateWakeIndicator() {
+      const indicator = document.getElementById('wakeIndicator');
+      const label = document.getElementById('wakeIndicatorText');
+      if (!indicator || !label) return;
+
+      if (wakeLockUnavailableReason === 'unsupported') {
+        indicator.classList.remove('active');
+        label.textContent = 'Wake lock unsupported';
+        indicator.title = "This browser doesn't support the Screen Wake Lock API.";
+        return;
+      }
+
+      if (wakeLockUnavailableReason === 'blocked') {
+        indicator.classList.remove('active');
+        label.textContent = 'Wake lock blocked here';
+        indicator.title = 'Screen Wake Lock is disallowed in this environment (often a sandboxed preview/iframe). Open this file directly in a browser tab to enable it.';
+        return;
+      }
+
+      if (wakeLockSentinel) {
+        indicator.classList.add('active');
+        label.textContent = 'Screen stays awake';
+        indicator.title = '';
+      } else {
+        indicator.classList.remove('active');
+        label.textContent = 'Screen may sleep';
+        indicator.title = '';
+      }
+    }
+
+    // isUserGesture: pass true when this call is a direct result of a user
+    // action (e.g. clicking Start). Some browsers only grant the wake lock
+    // off the back of a real gesture, so those calls are always allowed to
+    // retry even after a prior denial; automatic/background calls are not,
+    // so a permissions-policy denial doesn't retry (and log) on every tick.
+    async function requestWakeLock(isUserGesture = false) {
+      if (!('wakeLock' in navigator)) {
+        wakeLockUnavailableReason = 'unsupported';
+        updateWakeIndicator();
+        return;
+      }
+      if (wakeLockSentinel) return; // already held
+      if (wakeLockUnavailableReason === 'blocked' && !isUserGesture) return;
+
+      try {
+        wakeLockSentinel = await navigator.wakeLock.request('screen');
+        wakeLockUnavailableReason = null;
+        wakeLockSentinel.addEventListener('release', () => {
+          wakeLockSentinel = null;
+          updateWakeIndicator();
+        });
+        updateWakeIndicator();
+      } catch (err) {
+        if (err.name === 'NotAllowedError') {
+          wakeLockUnavailableReason = 'blocked';
+          if (!wakeLockWarningShown) {
+            wakeLockWarningShown = true;
+            console.warn('DeepFlow: Screen Wake Lock was denied (permissions policy). The screen may turn off during long sessions in this environment.');
+          }
+        } else {
+          console.error(`${err.name}: ${err.message}`);
+        }
+        updateWakeIndicator();
+      }
+    }
+
+    function releaseWakeLock() {
+      if (wakeLockSentinel) {
+        wakeLockSentinel.release();
+        wakeLockSentinel = null;
+        updateWakeIndicator();
+      }
+    }
+
+    // Central place that decides whether the screen should be kept awake:
+    // - "Always Keep Screen Awake" is on  -> stays awake all the time
+    // - it's off                          -> stays awake only while a timer is running
+    function evaluateWakeLockPolicy(isUserGesture = false) {
+      if (settings.keepScreenAwake || isTimerRunning) {
+        requestWakeLock(isUserGesture);
+      } else {
+        releaseWakeLock();
+      }
+    }
+
+    // Wake locks are automatically released when a tab is hidden/minimized.
+    // Re-evaluate the policy as soon as the tab is visible again.
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        evaluateWakeLockPolicy();
+      }
+    });
+
+    function logSession(message) {
+      const entry = document.createElement('li');
+      entry.textContent = `${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}: ${message}`;
+      document.getElementById('sessionLog').prepend(entry);
+      
+      if (document.getElementById('sessionLog').children.length > 20) {
+        document.getElementById('sessionLog').removeChild(document.getElementById('sessionLog').lastChild);
+      }
+    }
+
+    function notifyUser(message, title = 'DeepFlow Timer') {
+      if (settings.desktopNotifications && 'Notification' in window && Notification.permission === 'granted') {
+        new Notification(title, { 
+          body: message,
+          icon: NOTIFICATION_ICON
+        });
+      } else if (Notification.permission !== 'denied') {
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted' && settings.desktopNotifications) {
+            new Notification(title, { 
+              body: message,
+              icon: NOTIFICATION_ICON
+            });
+          }
+        });
+      }
+      // Note: sound is handled by showNotification(), which is always called
+      // alongside notifyUser() - playing it here too would double it up.
+    }
+
+    // Shared AudioContext for generating notification tones locally (no audio files, no network)
+    let audioCtx = null;
+
+    function playNotificationSound() {
+      try {
+        if (!audioCtx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContextClass) return;
+          audioCtx = new AudioContextClass();
+        }
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+
+        const now = audioCtx.currentTime;
+        // Two-note chime: a short pleasant "ding-dong"
+        [880, 660].forEach((freq, i) => {
+          const oscillator = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          oscillator.type = 'sine';
+          oscillator.frequency.value = freq;
+
+          const start = now + i * 0.15;
+          const end = start + 0.25;
+          gain.gain.setValueAtTime(0, start);
+          gain.gain.linearRampToValueAtTime(0.3, start + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.001, end);
+
+          oscillator.connect(gain);
+          gain.connect(audioCtx.destination);
+          oscillator.start(start);
+          oscillator.stop(end);
+        });
+      } catch (e) {
+        console.log('Audio playback failed:', e);
+      }
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // Validates a raw dailyHistory object (from storage or an imported
+    // backup) into a known-safe shape: valid YYYY-MM-DD keys only, each
+    // holding an array of well-formed session entries. Used by both
+    // loadDailyHistory() and importData() so the two paths can't drift.
+    function sanitizeDailyHistory(raw) {
+      const clean = {};
+      if (!raw || typeof raw !== 'object') return clean;
+
+      Object.keys(raw).forEach(key => {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) return;
+        const dayRaw = raw[key];
+        if (!dayRaw || !Array.isArray(dayRaw.sessions)) return;
+
+        const sessions = dayRaw.sessions
+          .filter(s => s && (s.type === 'focus' || s.type === 'break') &&
+                       typeof s.durationSeconds === 'number' && isFinite(s.durationSeconds) && s.durationSeconds >= 0)
+          .map(s => ({
+            type: s.type,
+            breakType: (s.breakType === 'short' || s.breakType === 'long' || s.breakType === 'lunch') ? s.breakType : null,
+            durationSeconds: Math.round(s.durationSeconds),
+            completedAt: (typeof s.completedAt === 'number' && isFinite(s.completedAt)) ? s.completedAt : Date.now()
+          }));
+
+        clean[key] = { sessions };
+      });
+
+      return clean;
+    }
+
+    function loadDailyHistory() {
+      const saved = storageGet('deepFlowDailyHistory');
+      if (saved) {
+        try {
+          dailyHistory = sanitizeDailyHistory(JSON.parse(saved));
+        } catch (e) {
+          console.error('Failed to parse daily history, starting fresh:', e);
+          dailyHistory = {};
+        }
+      }
+    }
+
+    // Derives every displayed metric for one day directly from its raw
+    // session list, so aggregate numbers can never drift out of sync with
+    // the underlying data - there's only one source of truth per day.
+    function computeDayStats(dateKey) {
+      const sessions = (dailyHistory[dateKey] && dailyHistory[dateKey].sessions) || [];
+      let focusSessions = 0, focusSeconds = 0, breakSessions = 0, breakSeconds = 0;
+
+      sessions.forEach(s => {
+        if (s.type === 'focus') {
+          focusSessions++;
+          focusSeconds += s.durationSeconds;
+        } else {
+          breakSessions++;
+          breakSeconds += s.durationSeconds;
+        }
+      });
+
+      // A "cycle" is one focus session plus its following break - the
+      // classic Pomodoro unit. Counted by completed breaks, since a break
+      // only ever follows a focus session in this app's flow.
+      const cyclesCompleted = Math.min(focusSessions, breakSessions);
+      const avgFocusSeconds = focusSessions > 0 ? Math.round(focusSeconds / focusSessions) : 0;
+
+      return { focusSessions, focusSeconds, breakSessions, breakSeconds, cyclesCompleted, avgFocusSeconds };
+    }
+
+    // The single place a completed (or explicitly skipped) session gets
+    // written to history. Always records against activeDate - the day the
+    // user is actually working on - regardless of which day they might
+    // currently be browsing in the history UI.
+    function recordCompletedSession(type, breakType, durationSeconds) {
+      if (!durationSeconds || durationSeconds <= 0) return;
+
+      if (!dailyHistory[activeDate]) {
+        dailyHistory[activeDate] = { sessions: [] };
+      }
+      dailyHistory[activeDate].sessions.push({
+        type,
+        breakType: breakType || null,
+        durationSeconds: Math.round(durationSeconds),
+        completedAt: Date.now()
+      });
+
+      storageSet('deepFlowDailyHistory', JSON.stringify(dailyHistory));
+
+      // Only refresh the visible stat numbers if we're looking at the day
+      // that just changed - browsing a past day shouldn't have its
+      // numbers shift underneath the user because today's timer ticked.
+      if (viewingDate === activeDate) {
+        renderDailyStats(viewingDate);
+      }
+      renderHistoryChart();
+    }
+
+    function formatHoursMinutes(totalSeconds) {
+      const totalMinutes = Math.floor(totalSeconds / 60);
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+      return `${hours}h ${minutes}m`;
+    }
+
+    function formatDayLabel(dateKey) {
+      const [y, m, d] = dateKey.split('-').map(Number);
+      const date = new Date(y, m - 1, d);
+      return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    }
+
+    // Renders whichever day is being viewed (not necessarily activeDate)
+    // into the stats tiles, and shows a small badge when the viewed day
+    // isn't the active working day so it's never ambiguous which is which.
+    function renderDailyStats(dateKey) {
+      const s = computeDayStats(dateKey);
+
+      document.getElementById('statFocusSessions').textContent = s.focusSessions;
+      document.getElementById('statFocusTime').textContent = formatHoursMinutes(s.focusSeconds);
+      document.getElementById('statBreakSessions').textContent = s.breakSessions;
+      document.getElementById('statBreakTime').textContent = formatHoursMinutes(s.breakSeconds);
+      document.getElementById('statCycles').textContent = s.cyclesCompleted;
+      document.getElementById('statAvgFocus').textContent = s.avgFocusSeconds > 0 ? `${Math.round(s.avgFocusSeconds / 60)}m` : '0m';
+
+      const badge = document.getElementById('historyBadge');
+      if (badge) {
+        if (dateKey !== activeDate) {
+          badge.style.display = '';
+          badge.textContent = dateKey === getDateKey()
+            ? `Viewing today — your active working day is ${formatDayLabel(activeDate)}`
+            : `Viewing history for ${formatDayLabel(dateKey)} — not your active working day`;
+        } else {
+          badge.style.display = 'none';
+        }
+      }
+    }
+
+    // ------------------------------------------------------------------
+    // Productivity chart. Rendered as a hand-built inline SVG (no charting
+    // library) so the app stays a single, fully offline file.
+    // ------------------------------------------------------------------
+
+    // Which days to plot: every day with at least one recorded session,
+    // plus always today and the active day (even if empty) so "where you
+    // are right now" is always visible on the chart, then capped to the
+    // most recent 14 so it stays readable.
+    function getHistoryDays(maxDays = 14) {
+      const keys = new Set(
+        Object.keys(dailyHistory).filter(k => dailyHistory[k].sessions && dailyHistory[k].sessions.length > 0)
+      );
+      keys.add(getDateKey());
+      keys.add(activeDate);
+
+      return Array.from(keys).sort().slice(-maxDays);
+    }
+
+    function metricValueForDay(dateKey, metric) {
+      const s = computeDayStats(dateKey);
+      switch (metric) {
+        case 'focusMinutes': return Math.round(s.focusSeconds / 60);
+        case 'focusSessions': return s.focusSessions;
+        case 'cycles': return s.cyclesCompleted;
+        default: return 0;
+      }
+    }
+
+    const CHART_METRIC_UNITS = {
+      focusMinutes: 'min',
+      focusSessions: 'sessions',
+      cycles: 'cycles'
+    };
+
+    function renderHistoryChart() {
+      const container = document.getElementById('historyChartContainer');
+      if (!container) return;
+
+      const days = getHistoryDays(14);
+      const values = days.map(k => metricValueForDay(k, chartMetric));
+      const maxVal = Math.max(1, ...values);
+      const hasAnyData = values.some(v => v > 0);
+
+      if (!hasAnyData) {
+        container.innerHTML = '<p class="chart-empty">No sessions recorded yet. Complete a focus session to see your trend here.</p>';
+        return;
+      }
+
+      const width = 700;
+      const height = 220;
+      const paddingLeft = 8;
+      const paddingRight = 8;
+      const paddingTop = 20;
+      const paddingBottom = 30;
+      const chartWidth = width - paddingLeft - paddingRight;
+      const chartHeight = height - paddingTop - paddingBottom;
+      const slot = chartWidth / days.length;
+      const barGap = Math.min(14, slot * 0.3);
+      const barWidth = Math.max(6, slot - barGap);
+      const unit = CHART_METRIC_UNITS[chartMetric];
+
+      let bars = '';
+      days.forEach((dateKey, i) => {
+        const val = values[i];
+        const barHeight = (val / maxVal) * chartHeight;
+        const x = paddingLeft + i * slot + barGap / 2;
+        const y = paddingTop + (chartHeight - barHeight);
+        const isViewing = dateKey === viewingDate;
+        const fill = isViewing ? 'var(--focus-strong)' : 'var(--focus)';
+        const opacity = isViewing ? '1' : '0.5';
+        const renderedHeight = val > 0 ? Math.max(barHeight, 3) : 0;
+        const renderedY = paddingTop + (chartHeight - renderedHeight);
+        const safeLabel = formatDayLabel(dateKey).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+
+        bars += `
+          <g class="chart-bar-group" onclick="selectViewingDate('${dateKey}')" style="cursor:pointer;">
+            <rect x="${x - barGap / 2}" y="${paddingTop}" width="${barWidth + barGap}" height="${chartHeight}" fill="transparent"></rect>
+            <rect x="${x}" y="${renderedY}" width="${barWidth}" height="${renderedHeight}" rx="4" fill="${fill}" opacity="${opacity}">
+              <title>${safeLabel}: ${val} ${unit}</title>
+            </rect>
+            <text x="${x + barWidth / 2}" y="${y - 6}" text-anchor="middle" class="chart-value-label">${val > 0 ? val : ''}</text>
+            <text x="${x + barWidth / 2}" y="${height - paddingBottom + 16}" text-anchor="middle" class="chart-axis-label">${safeLabel}</text>
+          </g>
+        `;
+      });
+
+      container.innerHTML = `
+        <svg viewbox="0 0 ${width} ${height}" class="history-chart-svg" xmlns="http://www.w3.org/2000/svg">
+          <line x1="${paddingLeft}" y1="${paddingTop + chartHeight}" x2="${width - paddingRight}" y2="${paddingTop + chartHeight}" class="chart-axis-line"></line>
+          ${bars}
+        </svg>
+      `;
+    }
+
+    // Called both from the chart (clicking a bar) and the date-nav
+    // controls. Only ever changes viewingDate - never activeDate - so
+    // browsing history can't accidentally redirect where new sessions get
+    // recorded.
+    function selectViewingDate(dateKey) {
+      viewingDate = dateKey;
+      const input = document.getElementById('historyDateInput');
+      if (input) input.value = dateKey;
+      renderDailyStats(viewingDate);
+      renderHistoryChart();
+      updateHistoryNavState();
+    }
+
+    function shiftViewingDate(deltaDays) {
+      const [y, m, d] = viewingDate.split('-').map(Number);
+      const date = new Date(y, m - 1, d);
+      date.setDate(date.getDate() + deltaDays);
+      const newKey = getDateKey(date);
+
+      if (newKey > getDateKey()) return; // never browse into the future
+      selectViewingDate(newKey);
+    }
+
+    function updateHistoryNavState() {
+      const nextBtn = document.getElementById('historyNextBtn');
+      if (nextBtn) {
+        nextBtn.disabled = viewingDate >= getDateKey();
+      }
+    }
+
+    // The explicit "New Day" action (distinct from Reset - see
+    // resetTimer()). Changes activeDate, gives the user a completely
+    // fresh timer ready to go, and never touches any existing history.
+    function startNewDay() {
+      const dateInput = document.getElementById('historyDateInput');
+      const targetDate = (dateInput && dateInput.value) || getDateKey();
+      const dateLabel = formatDayLabel(targetDate);
+      const previousDateLabel = formatDayLabel(activeDate);
+
+      const message = isTimerRunning
+        ? `Start a new day (${dateLabel})? Your current session will stop and won't be recorded. All of ${previousDateLabel}'s history stays saved.`
+        : `Start a new day (${dateLabel})? Your timer will reset to a fresh focus session. All of ${previousDateLabel}'s history stays saved.`;
+
+      showConfirm('Start New Day?', message).then(confirmed => {
+        if (!confirmed) return;
+
+        clearInterval(timerInterval);
+        isTimerRunning = false;
+        evaluateWakeLockPolicy();
+
+        activeDate = targetDate;
+        viewingDate = activeDate;
+        currentMode = 'focus';
+        currentSession = 1;
+        totalTime = settings.focusDuration * 60;
+        timeLeft = totalTime;
+
+        updateDisplay();
+        updateSkipBreakButton();
+        document.getElementById('sessionCount').textContent = 'Session 1';
+        document.getElementById('status').textContent = 'Ready to Focus';
+        document.getElementById('sessionLog').innerHTML = '';
+        if (dateInput) dateInput.value = activeDate;
+
+        renderDailyStats(viewingDate);
+        renderHistoryChart();
+        updateHistoryNavState();
+        saveState();
+
+        showNotification('New Day Started', `You're now working on ${dateLabel}. Ready to focus!`, 'success', 3000);
+      });
+    }
+
+
+    function saveState() {
+      const state = {
+        timeLeft,
+        currentSession,
+        currentMode,
+        activeDate
+      };
+      
+      storageSet('deepFlowState', JSON.stringify(state));
+    }
+
+    function loadState() {
+      const saved = storageGet('deepFlowState');
+      if (saved) {
+        try {
+          const state = JSON.parse(saved);
+          if (typeof state.timeLeft === 'number' && state.timeLeft >= 0) {
+            timeLeft = state.timeLeft;
+          }
+          if (typeof state.currentSession === 'number' && state.currentSession >= 1) {
+            currentSession = state.currentSession;
+          }
+          if (state.currentMode === 'focus' || state.currentMode === 'break') {
+            currentMode = state.currentMode;
+          }
+          if (typeof state.activeDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(state.activeDate)) {
+            activeDate = state.activeDate;
+          }
+          // Note: an old lifetime `stats` field from a prior version of the
+          // app (if present) is intentionally ignored now that stats are
+          // tracked per day via dailyHistory instead.
+
+          updateDisplay();
+          updateSkipBreakButton();
+        } catch (e) {
+          console.error('Failed to parse saved state, starting fresh:', e);
+        }
+      }
+      viewingDate = activeDate;
+    }
+
+    // Settings Functions
+    function openSettings() {
+      document.getElementById('settingsPanel').classList.add('active');
+      document.getElementById('settingsOverlay').classList.add('active');
+      loadSettings();
+    }
+
+    function closeSettings() {
+      saveSettings();
+      document.getElementById('settingsPanel').classList.remove('active');
+      document.getElementById('settingsOverlay').classList.remove('active');
+    }
+
+    function applyTheme(isDark) {
+      document.documentElement.classList.toggle('theme-light', !isDark);
+    }
+
+    function loadSettings() {
+      const savedSettings = storageGet('deepFlowSettings');
+      if (savedSettings) {
+        try {
+          settings = { ...DEFAULT_SETTINGS, ...JSON.parse(savedSettings) };
+        } catch (e) {
+          console.error('Failed to parse saved settings, using defaults:', e);
+          settings = { ...DEFAULT_SETTINGS };
+        }
+      }
+      
+      document.getElementById('focusDuration').value = settings.focusDuration;
+      document.getElementById('shortBreakDuration').value = settings.shortBreakDuration;
+      document.getElementById('longBreakDuration').value = settings.longBreakDuration;
+      document.getElementById('lunchBreakDuration').value = settings.lunchBreakDuration;
+      document.getElementById('sessionsBeforeLongBreak').value = settings.sessionsBeforeLongBreak;
+      document.getElementById('sessionsBeforeLunch').value = settings.sessionsBeforeLunch;
+      document.getElementById('darkModeToggle').checked = settings.darkMode;
+      document.getElementById('pulseTimerToggle').checked = settings.pulseTimer;
+      document.getElementById('keepScreenAwakeToggle').checked = settings.keepScreenAwake;
+      document.getElementById('soundNotificationsToggle').checked = settings.soundNotifications;
+      document.getElementById('desktopNotificationsToggle').checked = settings.desktopNotifications;
+
+      applyTheme(settings.darkMode);
+    }
+
+    function clampSetting(value, min, max, fallback) {
+      const parsed = parseInt(value);
+      if (isNaN(parsed)) return fallback;
+      return Math.min(max, Math.max(min, parsed));
+    }
+
+    function saveSettings() {
+      settings.focusDuration = clampSetting(document.getElementById('focusDuration').value, 1, 120, settings.focusDuration);
+      settings.shortBreakDuration = clampSetting(document.getElementById('shortBreakDuration').value, 1, 30, settings.shortBreakDuration);
+      settings.longBreakDuration = clampSetting(document.getElementById('longBreakDuration').value, 1, 60, settings.longBreakDuration);
+      settings.lunchBreakDuration = clampSetting(document.getElementById('lunchBreakDuration').value, 1, 120, settings.lunchBreakDuration);
+      settings.sessionsBeforeLongBreak = clampSetting(document.getElementById('sessionsBeforeLongBreak').value, 1, 10, settings.sessionsBeforeLongBreak);
+      settings.sessionsBeforeLunch = clampSetting(document.getElementById('sessionsBeforeLunch').value, 1, 20, settings.sessionsBeforeLunch);
+      settings.darkMode = document.getElementById('darkModeToggle').checked;
+      settings.pulseTimer = document.getElementById('pulseTimerToggle').checked;
+      settings.keepScreenAwake = document.getElementById('keepScreenAwakeToggle').checked;
+      settings.soundNotifications = document.getElementById('soundNotificationsToggle').checked;
+      settings.desktopNotifications = document.getElementById('desktopNotificationsToggle').checked;
+
+      // Reflect any clamped values back into the visible fields
+      document.getElementById('focusDuration').value = settings.focusDuration;
+      document.getElementById('shortBreakDuration').value = settings.shortBreakDuration;
+      document.getElementById('longBreakDuration').value = settings.longBreakDuration;
+      document.getElementById('lunchBreakDuration').value = settings.lunchBreakDuration;
+      document.getElementById('sessionsBeforeLongBreak').value = settings.sessionsBeforeLongBreak;
+      document.getElementById('sessionsBeforeLunch').value = settings.sessionsBeforeLunch;
+      
+      storageSet('deepFlowSettings', JSON.stringify(settings));
+      
+      // Apply settings that need immediate effect
+      if (!settings.pulseTimer) {
+        document.getElementById('timer').style.animation = 'none';
+      }
+      applyTheme(settings.darkMode);
+      evaluateWakeLockPolicy();
+
+      // Make the new duration show up right away instead of requiring a
+      // separate manual Reset click (only while idle - see syncTimerWithSettings).
+      syncTimerWithSettings();
+      
+      showNotification('Settings Saved', 'Your settings have been updated.', 'success', 2000);
+    }
+
+    function exportData() {
+      const data = {
+        state: {
+          timeLeft,
+          currentSession,
+          currentMode,
+          activeDate,
+        },
+        dailyHistory,
+        settings
+      };
+
+      const jsonText = JSON.stringify(data, null, 2);
+
+      try {
+        // A data: URI is used instead of a Blob/createObjectURL URL.
+        // Blob URLs can trigger a Chrome restriction ("'file:' URLs are
+        // treated as unique security origins") when the page itself was
+        // opened directly from disk (file://), since the blob's origin
+        // doesn't cleanly match the page's file: origin in that case.
+        // data: URIs don't have that problem and are reliable for a file
+        // this small.
+        const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(jsonText);
+        const a = document.createElement('a');
+        a.href = dataUri;
+        a.download = `deepflow-backup-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } catch (err) {
+        // Automatic downloads can still be blocked in some restricted
+        // environments. Either way, the dialog below gives the user a
+        // guaranteed manual fallback.
+        console.error('Automatic download failed, falling back to manual copy:', err);
+      }
+
+      showExportDialog(jsonText);
+    }
+
+    function showExportDialog(jsonText) {
+      const overlay = document.getElementById('exportOverlay');
+      const dialog = document.getElementById('exportDialog');
+      const textarea = document.getElementById('exportTextarea');
+      const closeBtn = document.getElementById('exportCloseBtn');
+      const copyBtn = document.getElementById('exportCopyBtn');
+
+      textarea.value = jsonText;
+
+      const close = () => {
+        overlay.classList.remove('active');
+        dialog.classList.remove('active');
+        closeBtn.removeEventListener('click', close);
+        copyBtn.removeEventListener('click', onCopy);
+        overlay.removeEventListener('click', close);
+      };
+
+      const onCopy = async () => {
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(jsonText);
+            showNotification('Copied', 'Backup data copied to clipboard.', 'success', 2000);
+            return;
+          }
+        } catch (e) {
+          // Clipboard API blocked or denied - fall through to manual select.
+        }
+        textarea.focus();
+        textarea.select();
+        try {
+          document.execCommand('copy');
+          showNotification('Copied', 'Backup data copied to clipboard.', 'success', 2000);
+        } catch (e) {
+          showNotification('Select the Text to Copy', 'Press Ctrl/Cmd+C to copy the selected text.', 'warning', 3000);
+        }
+      };
+
+      closeBtn.addEventListener('click', close);
+      copyBtn.addEventListener('click', onCopy);
+      overlay.addEventListener('click', close);
+
+      overlay.classList.add('active');
+      dialog.classList.add('active');
+      textarea.focus();
+      textarea.select();
+    }
+
+    function importData() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      
+      input.onchange = e => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return; // user cancelled the picker
+
+        const reader = new FileReader();
+
+        reader.onerror = () => {
+          console.error('Error reading file:', reader.error);
+          showNotification('Import Error', 'Could not read the selected file.', 'error', 3000);
+        };
+
+        reader.onload = event => {
+          try {
+            const data = JSON.parse(event.target.result);
+            
+            // Import state
+            if (data.state) {
+              if (typeof data.state.timeLeft === 'number' && data.state.timeLeft >= 0) {
+                timeLeft = data.state.timeLeft;
+              }
+              if (typeof data.state.currentSession === 'number' && data.state.currentSession >= 1) {
+                currentSession = data.state.currentSession;
+              }
+              if (data.state.currentMode === 'focus' || data.state.currentMode === 'break') {
+                currentMode = data.state.currentMode;
+              }
+              if (typeof data.state.activeDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(data.state.activeDate)) {
+                activeDate = data.state.activeDate;
+                viewingDate = activeDate;
+              }
+            }
+            
+            // Import daily history
+            if (data.dailyHistory) {
+              dailyHistory = sanitizeDailyHistory(data.dailyHistory);
+              storageSet('deepFlowDailyHistory', JSON.stringify(dailyHistory));
+            }
+            
+            // Import settings (validated the same way manual entry is)
+            if (data.settings) {
+              const s = data.settings;
+              settings = {
+                focusDuration: clampSetting(s.focusDuration, 1, 120, settings.focusDuration),
+                shortBreakDuration: clampSetting(s.shortBreakDuration, 1, 30, settings.shortBreakDuration),
+                longBreakDuration: clampSetting(s.longBreakDuration, 1, 60, settings.longBreakDuration),
+                lunchBreakDuration: clampSetting(s.lunchBreakDuration, 1, 120, settings.lunchBreakDuration),
+                sessionsBeforeLongBreak: clampSetting(s.sessionsBeforeLongBreak, 1, 10, settings.sessionsBeforeLongBreak),
+                sessionsBeforeLunch: clampSetting(s.sessionsBeforeLunch, 1, 20, settings.sessionsBeforeLunch),
+                darkMode: typeof s.darkMode === 'boolean' ? s.darkMode : settings.darkMode,
+                pulseTimer: typeof s.pulseTimer === 'boolean' ? s.pulseTimer : settings.pulseTimer,
+                keepScreenAwake: typeof s.keepScreenAwake === 'boolean' ? s.keepScreenAwake : settings.keepScreenAwake,
+                soundNotifications: typeof s.soundNotifications === 'boolean' ? s.soundNotifications : settings.soundNotifications,
+                desktopNotifications: typeof s.desktopNotifications === 'boolean' ? s.desktopNotifications : settings.desktopNotifications
+              };
+              storageSet('deepFlowSettings', JSON.stringify(settings));
+              loadSettings(); // refresh settings panel fields + re-apply theme
+              evaluateWakeLockPolicy();
+            }
+            
+            updateDisplay();
+            updateSkipBreakButton();
+            document.getElementById('sessionCount').textContent = `Session ${currentSession}`;
+            document.getElementById('historyDateInput').value = viewingDate;
+            document.getElementById('historyDateInput').max = getDateKey();
+            renderDailyStats(viewingDate);
+            renderHistoryChart();
+            updateHistoryNavState();
+            saveState();
+            showNotification('Data Imported', 'Your data has been imported successfully.', 'success', 3000);
+          } catch (error) {
+            console.error('Error importing data:', error);
+            showNotification('Import Error', 'Failed to import data. Please check the file.', 'error', 3000);
+          }
+        };
+        
+        reader.readAsText(file);
+      };
+      
+      try {
+        input.click();
+      } catch (err) {
+        console.error('Could not open the file picker:', err);
+        showNotification('Import Unavailable', "This environment doesn't allow opening a file picker.", 'error', 3000);
+      }
+    }
+
+    function resetData() {
+      showConfirm('Reset all data?', 'This will erase your settings, daily history, stats, and session log. This cannot be undone.').then(confirmed => {
+        if (!confirmed) return;
+
+        storageRemove('deepFlowState');
+        storageRemove('deepFlowSettings');
+        storageRemove('deepFlowDailyHistory');
+        
+        // Reset to defaults
+        dailyHistory = {};
+        activeDate = getDateKey();
+        viewingDate = activeDate;
+        timeLeft = 30 * 60;
+        totalTime = 30 * 60;
+        currentSession = 1;
+        currentMode = 'focus';
+        
+        settings = { ...DEFAULT_SETTINGS };
+        
+        updateDisplay();
+        updateSkipBreakButton();
+        document.getElementById('sessionCount').textContent = 'Session 1';
+        document.getElementById('sessionLog').innerHTML = '';
+        document.getElementById('historyDateInput').value = activeDate;
+        document.getElementById('historyDateInput').max = getDateKey();
+        renderDailyStats(viewingDate);
+        renderHistoryChart();
+        updateHistoryNavState();
+        loadSettings(); // refresh the settings panel fields to match the reset defaults, and re-apply theme
+        evaluateWakeLockPolicy();
+        
+        showNotification('Data Reset', 'All data has been reset to defaults.', 'info', 3000);
+      });
+    }
+
+    // Keyboard Shortcuts
+    function isModalOpen() {
+      const settingsPanel = document.getElementById('settingsPanel');
+      const confirmDialog = document.getElementById('confirmDialog');
+      const exportDialog = document.getElementById('exportDialog');
+      return (settingsPanel && settingsPanel.classList.contains('active')) ||
+             (confirmDialog && confirmDialog.classList.contains('active')) ||
+             (exportDialog && exportDialog.classList.contains('active'));
+    }
+
+    function setupKeyboardShortcuts() {
+      document.addEventListener('keydown', (e) => {
+        // Escape always tries to close/cancel whatever modal is currently
+        // open, regardless of what has focus (checked first, since focus is
+        // very often sitting on a <button> right after opening a modal -
+        // e.g. clicking the Settings gear - which the ignore-list below
+        // would otherwise swallow Escape along with everything else).
+        if (e.key === 'Escape' && isModalOpen()) {
+          if (document.getElementById('exportDialog').classList.contains('active')) {
+            document.getElementById('exportCloseBtn').click();
+          } else if (document.getElementById('confirmDialog').classList.contains('active')) {
+            document.getElementById('confirmCancelBtn').click();
+          } else {
+            closeSettings();
+          }
+          return;
+        }
+
+        // Ignore while typing/interacting with any form control, so native
+        // behavior (e.g. Space activating a focused button or checkbox)
+        // isn't hijacked.
+        const tag = e.target.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || tag === 'BUTTON') return;
+
+        // Ignore the remaining shortcuts while a modal is open, so they
+        // don't fire "behind" it (e.g. Space starting the timer while the
+        // user is configuring settings, or R resetting the timer mid-edit).
+        if (isModalOpen()) return;
+        
+        switch(e.key) {
+          case ' ':
+            e.preventDefault();
+            if (isTimerRunning) {
+              pauseTimer();
+            } else {
+              startTimer();
+            }
+            break;
+          case 'r':
+          case 'R':
+            e.preventDefault();
+            resetTimer();
+            break;
+          case 's':
+          case 'S':
+            e.preventDefault();
+            openSettings();
+            break;
+        }
+      });
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      // Attach the core UI event listeners FIRST and unconditionally, so
+      // the app stays interactive (Settings opens, keyboard shortcuts work)
+      // even if something further down throws unexpectedly - e.g. storage
+      // access being blocked in a restricted preview environment.
+      document.getElementById('settingsBtn').addEventListener('click', openSettings);
+      document.getElementById('settingsOverlay').addEventListener('click', closeSettings);
+      setupKeyboardShortcuts();
+
+      try {
+        // Load settings first
+        loadSettings();
+
+        // Load daily history before state, since loadState() sets
+        // activeDate/viewingDate and the render calls below need the
+        // history data already available to compute from.
+        loadDailyHistory();
+
+        // Then load state
+        loadState();
+
+        // Measure the progress ring before the first render
+        initRing();
+
+        // Update UI based on loaded state
+        updateDisplay();
+        renderDailyStats(viewingDate);
+        renderHistoryChart();
+        updateHistoryNavState();
+        document.getElementById('historyDateInput').value = viewingDate;
+        document.getElementById('historyDateInput').max = getDateKey();
+
+        // Daily History: date navigation, chart metric tabs, New Day
+        document.getElementById('historyPrevBtn').addEventListener('click', () => shiftViewingDate(-1));
+        document.getElementById('historyNextBtn').addEventListener('click', () => shiftViewingDate(1));
+        document.getElementById('historyTodayBtn').addEventListener('click', () => selectViewingDate(getDateKey()));
+        document.getElementById('historyDateInput').addEventListener('change', (e) => {
+          if (e.target.value) selectViewingDate(e.target.value);
+        });
+        document.querySelectorAll('.chart-tab').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.querySelectorAll('.chart-tab').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            chartMetric = btn.dataset.metric;
+            renderHistoryChart();
+          });
+        });
+        document.getElementById('newDayBtn').addEventListener('click', startNewDay);
+
+        // Live-preview the visible timer as the user types a new duration
+        // into Settings (only takes effect while idle - see previewDurationInput).
+        ['focusDuration', 'shortBreakDuration', 'longBreakDuration', 'lunchBreakDuration'].forEach(id => {
+          document.getElementById(id).addEventListener('input', previewDurationInput);
+        });
+
+        // Attempt to keep the screen awake as soon as the user first
+        // interacts with the app (some browsers only grant the Wake Lock
+        // API off a real user gesture). The visibilitychange listener
+        // keeps re-evaluating after that.
+        const firstInteractionEvents = ['pointerdown', 'keydown'];
+        const requestWakeLockOnce = () => {
+          evaluateWakeLockPolicy(true); // real user gesture - worth a genuine attempt
+          firstInteractionEvents.forEach(evt => document.removeEventListener(evt, requestWakeLockOnce));
+        };
+        firstInteractionEvents.forEach(evt => document.addEventListener(evt, requestWakeLockOnce));
+
+        if ('Notification' in window) {
+          Notification.requestPermission().catch(() => {
+            // Ignore - desktop notifications are optional and the app
+            // falls back to in-app toasts either way.
+          });
+        }
+
+        // Periodically persist state while the timer runs, so timeLeft
+        // survives a refresh/close mid-session. Daily stats themselves are
+        // only ever recorded on actual completion/skip (recordCompletedSession),
+        // not on this tick - so a reset or an abandoned session never
+        // partially pollutes the history.
+        setInterval(() => {
+          if (isTimerRunning) {
+            saveState();
+          }
+        }, 1000);
+      } catch (error) {
+        console.error('DeepFlow initialization error:', error);
+        showNotification('Initialization Warning', 'Some features may be limited in this environment.', 'warning', 4000);
+      }
+    });
+  
+  </script>
+</body>
+</html>
