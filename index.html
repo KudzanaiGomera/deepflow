@@ -494,9 +494,21 @@
       line-height: 1.4;
     }
 
-    .new-day-btn {
+    .end-day-btn {
       width: 100%;
       margin-top: 16px;
+      background: var(--surface);
+      color: var(--text-secondary);
+    }
+
+    .end-day-btn:hover {
+      background: var(--surface-raised);
+      color: var(--text-primary);
+    }
+
+    .new-day-btn {
+      width: 100%;
+      margin-top: 10px;
       background: rgba(91, 127, 255, 0.1);
       color: var(--focus-strong);
       border: 1px solid rgba(91, 127, 255, 0.3);
@@ -504,6 +516,121 @@
 
     .new-day-btn:hover {
       background: rgba(91, 127, 255, 0.18);
+    }
+
+    /* ---------- Calendar ---------- */
+    .calendar-card {
+      margin-top: clamp(14px, 2.5vw, 22px);
+    }
+
+    .calendar-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .calendar-header button {
+      width: auto;
+    }
+
+    .calendar-month-label {
+      flex: 1;
+      min-width: 120px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--text-primary);
+    }
+
+    .calendar-summary {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .calendar-summary-item {
+      flex: 1;
+      background: var(--bg-1);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      text-align: center;
+    }
+
+    .calendar-summary-value {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .calendar-summary-label {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 2px;
+    }
+
+    .calendar-weekday-row {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-bottom: 8px;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+    }
+
+    .calendar-day {
+      position: relative;
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text-secondary);
+      background: var(--bg-1);
+      border: 1px solid var(--border);
+      transition: transform 0.15s var(--ease), border-color 0.15s var(--ease);
+    }
+
+    .calendar-day:hover {
+      transform: scale(1.06);
+      border-color: var(--border-strong);
+    }
+
+    .calendar-day.outside-month {
+      visibility: hidden;
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .calendar-day.has-activity {
+      background: rgba(91, 127, 255, calc(0.12 + var(--intensity, 0) * 0.6));
+      color: var(--text-primary);
+    }
+
+    .calendar-day.is-today {
+      border-color: var(--break-strong);
+    }
+
+    .calendar-day.is-viewing {
+      outline: 2px solid var(--focus-strong);
+      outline-offset: 1px;
     }
 
     /* ---------- Productivity chart ---------- */
@@ -1045,6 +1172,12 @@
 <span id="wakeIndicatorText">Screen may sleep</span>
 </div>
 <div class="session-count" id="sessionCount">Session 1</div>
+<button aria-label="Pop out timer" class="icon-btn" id="pipBtn" style="display:none;" title="Pop out timer">
+<svg fill="none" height="18" viewbox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg">
+<rect height="14" rx="2" stroke="currentColor" stroke-width="2" width="18" x="3" y="5"></rect>
+<rect fill="currentColor" height="5" rx="1" width="7" x="12" y="12"></rect>
+</svg>
+</button>
 <button aria-label="Settings" class="icon-btn" id="settingsBtn">
 <svg fill="none" height="18" viewbox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg">
 <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
@@ -1144,6 +1277,12 @@
 <div class="stat-label">Avg Focus Session</div>
 </div>
 </div>
+<button class="end-day-btn" id="endDayBtn">
+<svg fill="none" height="16" viewbox="0 0 16 16" width="16" xmlns="http://www.w3.org/2000/svg">
+<path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+        End My Day
+      </button>
 <button class="new-day-btn" id="newDayBtn">
 <svg fill="none" height="16" viewbox="0 0 16 16" width="16" xmlns="http://www.w3.org/2000/svg">
 <path d="M8 3V13M3 8H13" stroke="currentColor" stroke-linecap="round" stroke-width="2"></path>
@@ -1157,6 +1296,37 @@
 </div>
 </aside>
 </div>
+<section class="card calendar-card">
+<div class="card-heading"><span class="dot"></span>Calendar</div>
+<div class="calendar-header">
+<button aria-label="Previous month" class="icon-btn small" id="calPrevMonthBtn">
+<svg fill="none" height="14" viewbox="0 0 16 16" width="14" xmlns="http://www.w3.org/2000/svg">
+<path d="M10 3L5 8L10 13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+<div class="calendar-month-label" id="calMonthLabel">Month Year</div>
+<button aria-label="Next month" class="icon-btn small" id="calNextMonthBtn">
+<svg fill="none" height="14" viewbox="0 0 16 16" width="14" xmlns="http://www.w3.org/2000/svg">
+<path d="M6 3L11 8L6 13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+<button class="secondary small" id="calTodayBtn">This Month</button>
+</div>
+<div class="calendar-summary">
+<div class="calendar-summary-item">
+<div class="calendar-summary-value" id="calWeekTotal">0h 0m</div>
+<div class="calendar-summary-label">This Week</div>
+</div>
+<div class="calendar-summary-item">
+<div class="calendar-summary-value" id="calMonthTotal">0h 0m</div>
+<div class="calendar-summary-label">This Month</div>
+</div>
+</div>
+<div class="calendar-weekday-row">
+<span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+</div>
+<div class="calendar-grid" id="calendarGrid"></div>
+</section>
 <section class="card chart-card">
 <div class="card-heading"><span class="dot"></span>Productivity Trends</div>
 <div class="chart-metric-tabs" id="chartMetricTabs">
@@ -1202,7 +1372,7 @@
 </div>
 <div class="setting-item">
 <label for="sessionsBeforeLunch">Sessions before Lunch</label>
-<input id="sessionsBeforeLunch" max="20" min="1" type="number" value="8"/>
+<input id="sessionsBeforeLunch" max="20" min="1" type="number" value="6"/>
 </div>
 </div>
 <div class="settings-group">
@@ -1409,7 +1579,7 @@
       longBreakDuration: 15,
       lunchBreakDuration: 60,
       sessionsBeforeLongBreak: 4,
-      sessionsBeforeLunch: 8,
+      sessionsBeforeLunch: 6,
       darkMode: true,
       pulseTimer: true,
       keepScreenAwake: true,
@@ -1418,25 +1588,6 @@
     };
 
     let settings = { ...DEFAULT_SETTINGS };
-
-    // Break patterns based on session number
-    const breakPattern = {
-      1: 'short',
-      2: 'short',
-      3: 'short',
-      4: 'long',
-      5: 'short',
-      6: 'short',
-      7: 'short',
-      8: 'lunch',
-      9: 'short',
-      10: 'short',
-      11: 'short',
-      12: 'long',
-      13: 'short',
-      14: 'short',
-      15: 'short'
-    };
 
     // Notification System
     function showNotification(title, message, type = 'info', duration = 3000) {
@@ -1676,8 +1827,21 @@
       }
     }
 
+    // Determines the upcoming break type directly from the configurable
+    // settings (previously this used a hardcoded lookup table that
+    // completely ignored "Sessions before Long Break"/"Sessions before
+    // Lunch", so changing them in Settings had no effect at all).
     function getCurrentBreakType() {
-      return breakPattern[currentSession] || 'short';
+      const lunchEvery = settings.sessionsBeforeLunch;
+      const longEvery = settings.sessionsBeforeLongBreak;
+
+      if (lunchEvery > 0 && currentSession % lunchEvery === 0) {
+        return 'lunch';
+      }
+      if (longEvery > 0 && currentSession % longEvery === 0) {
+        return 'long';
+      }
+      return 'short';
     }
 
     // Keeps the on-screen timer in sync with whatever duration settings
@@ -1756,6 +1920,33 @@
       }
     }
 
+    // Reconstructs the same status label shown in the main #status pill,
+    // directly from state rather than reading the DOM - updateDisplay() is
+    // called from several places, sometimes before #status itself gets set
+    // by the caller, so reading the DOM here would occasionally be stale.
+    function getStatusLabel() {
+      if (isTimerRunning) {
+        return getModeLabel(currentMode);
+      }
+      if (timeLeft < totalTime) {
+        return 'Paused';
+      }
+      return currentMode === 'focus' ? 'Ready to Focus' : 'Ready for a Break';
+    }
+
+    function updateTabTitle() {
+      const mins = Math.floor(timeLeft / 60);
+      const secs = timeLeft % 60;
+      const timeText = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+      if (isTimerRunning) {
+        const modeShort = currentMode === 'focus' ? 'Focus' : 'Break';
+        document.title = `${timeText} · ${modeShort} — DeepFlow`;
+      } else {
+        document.title = 'DeepFlow';
+      }
+    }
+
     function updateDisplay() {
       const mins = Math.floor(timeLeft / 60);
       const secs = timeLeft % 60;
@@ -1780,6 +1971,9 @@
         timerEl.style.color = 'var(--break-strong)';
         if (caption) caption.textContent = isTimerRunning ? 'on break' : 'remaining';
       }
+
+      updateTabTitle();
+      updatePipWindow();
     }
 
     function handleSessionEnd() {
@@ -1943,6 +2137,197 @@
       }
     });
 
+    // ------------------------------------------------------------------
+    // Pop-out timer (Document Picture-in-Picture API).
+    // Supported in Chrome/Edge 116+ and Firefox 151+; not in Safari. The
+    // pop-out button is only shown (see DOMContentLoaded) when the API is
+    // actually present. The PiP window is a genuine separate document
+    // (like window.open()) but same-origin/same script realm, so its
+    // controls can call straight back into startTimer()/pauseTimer()/etc.
+    // without any postMessage plumbing.
+    // ------------------------------------------------------------------
+    let pipWindowRef = null;
+
+    const PIP_EXTRA_CSS = `
+      html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        display: block !important;
+        min-height: 100% !important;
+        height: 100%;
+        background: var(--bg-0) !important;
+      }
+      .pip-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        box-sizing: border-box;
+        padding: 14px;
+        gap: 8px;
+        text-align: center;
+      }
+      .pip-status {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+      }
+      .pip-timer {
+        font-size: clamp(2rem, 16vw, 2.8rem);
+        font-weight: 300;
+        font-family: 'SF Mono', 'Cascadia Code', Consolas, ui-monospace, monospace;
+        font-variant-numeric: tabular-nums;
+        line-height: 1;
+      }
+      .pip-progress {
+        width: 100%;
+        height: 6px;
+        background: var(--bg-1);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-pill);
+        overflow: hidden;
+      }
+      .pip-progress-fill {
+        height: 100%;
+        width: 0%;
+        transition: width 1s linear, background 0.4s var(--ease);
+        border-radius: var(--radius-pill);
+      }
+      .pip-buttons {
+        display: flex;
+        gap: 8px;
+        width: 100%;
+        margin-top: 4px;
+      }
+      .pip-btn {
+        flex: 1;
+        padding: 8px 6px;
+        border-radius: var(--radius-pill);
+        border: 1px solid var(--border);
+        background: var(--surface-raised);
+        color: var(--text-primary);
+        font-weight: 600;
+        font-size: 0.8rem;
+        cursor: pointer;
+        font-family: inherit;
+        min-width: 0;
+      }
+      .pip-btn-primary {
+        background: linear-gradient(135deg, var(--focus) 0%, #7C6BFF 100%);
+        color: #FFFFFF;
+        border-color: transparent;
+      }
+    `;
+
+    const PIP_BODY_HTML = `
+      <div class="pip-container">
+        <div class="pip-status" id="pipStatus">Ready to Focus</div>
+        <div class="pip-timer" id="pipTimer">30:00</div>
+        <div class="pip-progress"><div class="pip-progress-fill" id="pipProgressFill"></div></div>
+        <div class="pip-buttons">
+          <button class="pip-btn pip-btn-primary" id="pipToggleBtn">Start</button>
+          <button class="pip-btn" id="pipResetBtn">Reset</button>
+          <button class="pip-btn" id="pipSkipBtn" style="display:none;">Skip</button>
+        </div>
+      </div>
+    `;
+
+    function isPipSupported() {
+      return 'documentPictureInPicture' in window;
+    }
+
+    async function openPipWindow() {
+      if (!isPipSupported()) {
+        showNotification('Not Supported', "Pop-out timer isn't supported in this browser yet.", 'warning', 3000);
+        return;
+      }
+
+      if (pipWindowRef) {
+        pipWindowRef.focus();
+        return;
+      }
+
+      try {
+        pipWindowRef = await documentPictureInPicture.requestWindow({ width: 260, height: 210 });
+      } catch (err) {
+        console.error('Failed to open pop-out window:', err);
+        showNotification('Pop-out Failed', 'Could not open the pop-out timer window.', 'error', 3000);
+        pipWindowRef = null;
+        return;
+      }
+
+      const pipDoc = pipWindowRef.document;
+
+      // Reuse the app's own stylesheet (design tokens, .pip-* would-be
+      // classes need the same CSS variables) plus PiP-specific overrides,
+      // since the PiP window starts as a blank document.
+      const mainStyleText = document.querySelector('style').textContent;
+      const styleEl = pipDoc.createElement('style');
+      styleEl.textContent = mainStyleText + PIP_EXTRA_CSS;
+      pipDoc.head.appendChild(styleEl);
+      pipDoc.title = 'DeepFlow';
+      pipDoc.documentElement.classList.toggle('theme-light', document.documentElement.classList.contains('theme-light'));
+      pipDoc.body.innerHTML = PIP_BODY_HTML;
+
+      pipDoc.getElementById('pipToggleBtn').addEventListener('click', () => {
+        if (isTimerRunning) {
+          pauseTimer();
+        } else {
+          startTimer();
+        }
+      });
+      pipDoc.getElementById('pipResetBtn').addEventListener('click', resetTimer);
+      pipDoc.getElementById('pipSkipBtn').addEventListener('click', skipBreak);
+
+      pipWindowRef.addEventListener('pagehide', () => {
+        pipWindowRef = null;
+      }, { once: true });
+
+      updatePipWindow();
+    }
+
+    function updatePipWindow() {
+      if (!pipWindowRef) return;
+      const doc = pipWindowRef.document;
+      const timerEl = doc.getElementById('pipTimer');
+      if (!timerEl) return; // window opened but not finished building yet
+
+      timerEl.textContent = document.getElementById('timer').textContent;
+
+      const statusEl = doc.getElementById('pipStatus');
+      const fillEl = doc.getElementById('pipProgressFill');
+      const toggleBtn = doc.getElementById('pipToggleBtn');
+      const skipBtn = doc.getElementById('pipSkipBtn');
+
+      statusEl.textContent = getStatusLabel();
+
+      const progress = totalTime > 0 ? ((totalTime - timeLeft) / totalTime) * 100 : 0;
+      fillEl.style.width = `${progress}%`;
+
+      if (currentMode === 'focus') {
+        timerEl.style.color = 'var(--focus-strong)';
+        fillEl.style.background = 'linear-gradient(90deg, var(--focus), var(--focus-strong))';
+      } else {
+        timerEl.style.color = 'var(--break-strong)';
+        fillEl.style.background = 'linear-gradient(90deg, var(--break), var(--break-strong))';
+      }
+
+      toggleBtn.textContent = isTimerRunning ? 'Pause' : 'Start';
+      skipBtn.style.display = currentMode === 'break' ? 'block' : 'none';
+    }
+
+    function updatePipTheme(isDark) {
+      if (!pipWindowRef) return;
+      pipWindowRef.document.documentElement.classList.toggle('theme-light', !isDark);
+    }
+
     function logSession(message) {
       const entry = document.createElement('li');
       entry.textContent = `${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}: ${message}`;
@@ -2088,6 +2473,53 @@
       return { focusSessions, focusSeconds, breakSessions, breakSeconds, cyclesCompleted, avgFocusSeconds };
     }
 
+    function addDays(dateKey, delta) {
+      const [y, m, d] = dateKey.split('-').map(Number);
+      const date = new Date(y, m - 1, d);
+      date.setDate(date.getDate() + delta);
+      return getDateKey(date);
+    }
+
+    // Monday-start week containing dateKey (ISO-style work week).
+    function getWeekRange(dateKey) {
+      const [y, m, d] = dateKey.split('-').map(Number);
+      const date = new Date(y, m - 1, d);
+      const dow = date.getDay(); // 0=Sun..6=Sat
+      const mondayOffset = dow === 0 ? -6 : 1 - dow;
+      const start = new Date(date);
+      start.setDate(start.getDate() + mondayOffset);
+      const end = new Date(start);
+      end.setDate(end.getDate() + 6);
+      return [getDateKey(start), getDateKey(end)];
+    }
+
+    // Calendar month containing dateKey.
+    function getMonthRange(dateKey) {
+      const [y, m] = dateKey.split('-').map(Number);
+      const start = new Date(y, m - 1, 1);
+      const end = new Date(y, m, 0); // day 0 of next month = last day of this one
+      return [getDateKey(start), getDateKey(end)];
+    }
+
+    // Sums computeDayStats() across an inclusive date range - used for the
+    // weekly/monthly totals shown above the calendar.
+    function computeRangeStats(startKey, endKey) {
+      const totals = { focusSessions: 0, focusSeconds: 0, breakSessions: 0, breakSeconds: 0, cyclesCompleted: 0 };
+      let cursor = startKey;
+      let guard = 0; // defensive cap, always well under a year of days
+      while (cursor <= endKey && guard < 400) {
+        const s = computeDayStats(cursor);
+        totals.focusSessions += s.focusSessions;
+        totals.focusSeconds += s.focusSeconds;
+        totals.breakSessions += s.breakSessions;
+        totals.breakSeconds += s.breakSeconds;
+        totals.cyclesCompleted += s.cyclesCompleted;
+        cursor = addDays(cursor, 1);
+        guard++;
+      }
+      return totals;
+    }
+
     // The single place a completed (or explicitly skipped) session gets
     // written to history. Always records against activeDate - the day the
     // user is actually working on - regardless of which day they might
@@ -2114,6 +2546,7 @@
         renderDailyStats(viewingDate);
       }
       renderHistoryChart();
+      renderCalendar();
     }
 
     function formatHoursMinutes(totalSeconds) {
@@ -2254,12 +2687,18 @@
     // controls. Only ever changes viewingDate - never activeDate - so
     // browsing history can't accidentally redirect where new sessions get
     // recorded.
+
+    // Which month the calendar currently displays (any date within it).
+    let calendarMonthKey = getDateKey();
+
     function selectViewingDate(dateKey) {
       viewingDate = dateKey;
       const input = document.getElementById('historyDateInput');
       if (input) input.value = dateKey;
+      calendarMonthKey = dateKey; // keep the calendar following whatever's being viewed
       renderDailyStats(viewingDate);
       renderHistoryChart();
+      renderCalendar();
       updateHistoryNavState();
     }
 
@@ -2278,6 +2717,111 @@
       if (nextBtn) {
         nextBtn.disabled = viewingDate >= getDateKey();
       }
+    }
+
+    // Renders the month grid plus the This Week / This Month summary
+    // (both always reflect whichever week/month viewingDate falls in, so
+    // browsing stays coherent with the numbers shown above it).
+    function renderCalendar() {
+      const grid = document.getElementById('calendarGrid');
+      const label = document.getElementById('calMonthLabel');
+      if (!grid || !label) return;
+
+      const [y, m] = calendarMonthKey.split('-').map(Number);
+      const firstOfMonth = new Date(y, m - 1, 1);
+      const daysInMonth = new Date(y, m, 0).getDate();
+      const firstDow = firstOfMonth.getDay(); // 0=Sun..6=Sat
+      const leadingBlanks = firstDow === 0 ? 6 : firstDow - 1; // Monday-start grid
+
+      label.textContent = firstOfMonth.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+
+      // Pre-compute each day's focus minutes once, both for the cells and
+      // to scale the heatmap intensity against the month's busiest day.
+      let maxMinutes = 0;
+      const dayMinutes = {};
+      for (let day = 1; day <= daysInMonth; day++) {
+        const key = getDateKey(new Date(y, m - 1, day));
+        const mins = Math.round(computeDayStats(key).focusSeconds / 60);
+        dayMinutes[key] = mins;
+        if (mins > maxMinutes) maxMinutes = mins;
+      }
+
+      const today = getDateKey();
+      let html = '';
+
+      for (let i = 0; i < leadingBlanks; i++) {
+        html += '<div class="calendar-day outside-month"></div>';
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const key = getDateKey(new Date(y, m - 1, day));
+        const mins = dayMinutes[key];
+        const intensity = maxMinutes > 0 ? Math.min(1, mins / maxMinutes) : 0;
+        const classes = ['calendar-day'];
+        if (mins > 0) classes.push('has-activity');
+        if (key === today) classes.push('is-today');
+        if (key === viewingDate) classes.push('is-viewing');
+
+        html += `<div class="${classes.join(' ')}" style="--intensity:${intensity}" onclick="selectViewingDate('${key}')" title="${formatDayLabel(key)}: ${mins} min focused"><span class="calendar-day-num">${day}</span></div>`;
+      }
+
+      grid.innerHTML = html;
+
+      const [weekStart, weekEnd] = getWeekRange(viewingDate);
+      const weekStats = computeRangeStats(weekStart, weekEnd);
+      document.getElementById('calWeekTotal').textContent = formatHoursMinutes(weekStats.focusSeconds);
+
+      const [monthStart, monthEnd] = getMonthRange(viewingDate);
+      const monthStats = computeRangeStats(monthStart, monthEnd);
+      document.getElementById('calMonthTotal').textContent = formatHoursMinutes(monthStats.focusSeconds);
+
+      const nextBtn = document.getElementById('calNextMonthBtn');
+      if (nextBtn) {
+        nextBtn.disabled = calendarMonthKey.slice(0, 7) >= today.slice(0, 7);
+      }
+    }
+
+    function shiftCalendarMonth(delta) {
+      const [y, m] = calendarMonthKey.split('-').map(Number);
+      const newKey = getDateKey(new Date(y, m - 1 + delta, 1));
+      if (newKey.slice(0, 7) > getDateKey().slice(0, 7)) return; // no future months
+      calendarMonthKey = newKey;
+      renderCalendar();
+    }
+
+    // "End My Day" - a lower-stakes, more frequent action than "New Day".
+    // It stops the current session and shows a recap of today's work, but
+    // never changes activeDate: it wraps up today, it doesn't advance to a
+    // new working day. Use "Start New Day" for that.
+    function endMyDay() {
+      const dayStats = computeDayStats(activeDate);
+      const hasActivity = dayStats.focusSessions > 0 || dayStats.breakSessions > 0;
+
+      const message = hasActivity
+        ? `Today so far: ${dayStats.focusSessions} focus session${dayStats.focusSessions === 1 ? '' : 's'} (${formatHoursMinutes(dayStats.focusSeconds)}) and ${dayStats.cyclesCompleted} full cycle${dayStats.cyclesCompleted === 1 ? '' : 's'} completed. This stops your timer for now - nothing is deleted, and you can keep going or start a new day anytime.`
+        : `You haven't logged any sessions yet today. This just stops the timer - your data stays exactly as it is.`;
+
+      showConfirm('End your day?', message).then(confirmed => {
+        if (!confirmed) return;
+
+        clearInterval(timerInterval);
+        isTimerRunning = false;
+        evaluateWakeLockPolicy();
+
+        // Idle the current session (same effect as Reset) without touching
+        // activeDate, mode, session count, or any history.
+        timeLeft = totalTime;
+        updateDisplay();
+        document.getElementById('status').textContent = currentMode === 'focus' ? 'Ready to Focus' : 'Ready for a Break';
+        updateSkipBreakButton();
+        saveState();
+
+        const recap = hasActivity
+          ? `${dayStats.focusSessions} focus session${dayStats.focusSessions === 1 ? '' : 's'} · ${formatHoursMinutes(dayStats.focusSeconds)} focused today. Nice work!`
+          : 'See you next time!';
+        showNotification('Day Ended', recap, 'success', 5000);
+        logSession('Day ended');
+      });
     }
 
     // The explicit "New Day" action (distinct from Reset - see
@@ -2316,6 +2860,8 @@
 
         renderDailyStats(viewingDate);
         renderHistoryChart();
+        calendarMonthKey = activeDate;
+        renderCalendar();
         updateHistoryNavState();
         saveState();
 
@@ -2380,6 +2926,7 @@
 
     function applyTheme(isDark) {
       document.documentElement.classList.toggle('theme-light', !isDark);
+      updatePipTheme(isDark);
     }
 
     function loadSettings() {
@@ -2608,6 +3155,8 @@
             document.getElementById('historyDateInput').max = getDateKey();
             renderDailyStats(viewingDate);
             renderHistoryChart();
+            calendarMonthKey = viewingDate;
+            renderCalendar();
             updateHistoryNavState();
             saveState();
             showNotification('Data Imported', 'Your data has been imported successfully.', 'success', 3000);
@@ -2655,6 +3204,8 @@
         document.getElementById('historyDateInput').max = getDateKey();
         renderDailyStats(viewingDate);
         renderHistoryChart();
+        calendarMonthKey = activeDate;
+        renderCalendar();
         updateHistoryNavState();
         loadSettings(); // refresh the settings panel fields to match the reset defaults, and re-apply theme
         evaluateWakeLockPolicy();
@@ -2735,6 +3286,15 @@
       document.getElementById('settingsOverlay').addEventListener('click', closeSettings);
       setupKeyboardShortcuts();
 
+      // Pop-out timer button - only shown when the browser actually
+      // supports the Document Picture-in-Picture API (Chrome/Edge 116+,
+      // Firefox 151+; not Safari).
+      const pipBtn = document.getElementById('pipBtn');
+      if (isPipSupported()) {
+        pipBtn.style.display = '';
+        pipBtn.addEventListener('click', openPipWindow);
+      }
+
       try {
         // Load settings first
         loadSettings();
@@ -2757,6 +3317,8 @@
         updateHistoryNavState();
         document.getElementById('historyDateInput').value = viewingDate;
         document.getElementById('historyDateInput').max = getDateKey();
+        calendarMonthKey = viewingDate;
+        renderCalendar();
 
         // Daily History: date navigation, chart metric tabs, New Day
         document.getElementById('historyPrevBtn').addEventListener('click', () => shiftViewingDate(-1));
@@ -2773,7 +3335,16 @@
             renderHistoryChart();
           });
         });
+        document.getElementById('endDayBtn').addEventListener('click', endMyDay);
         document.getElementById('newDayBtn').addEventListener('click', startNewDay);
+
+        // Calendar: month navigation
+        document.getElementById('calPrevMonthBtn').addEventListener('click', () => shiftCalendarMonth(-1));
+        document.getElementById('calNextMonthBtn').addEventListener('click', () => shiftCalendarMonth(1));
+        document.getElementById('calTodayBtn').addEventListener('click', () => {
+          calendarMonthKey = getDateKey();
+          renderCalendar();
+        });
 
         // Live-preview the visible timer as the user types a new duration
         // into Settings (only takes effect while idle - see previewDurationInput).
