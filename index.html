@@ -328,6 +328,45 @@
       gap: 10px;
     }
 
+    .quick-break-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+    }
+
+    .quick-break-label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .quick-break-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .quick-break-btn {
+      padding: 7px 14px;
+      font-size: 0.78rem;
+      min-width: 0;
+      width: auto;
+      background: var(--bg-1);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+
+    .quick-break-btn:hover {
+      background: var(--surface-raised);
+      color: var(--text-primary);
+      border-color: var(--break-strong);
+    }
+
     button {
       background: var(--surface-raised);
       color: var(--text-primary);
@@ -1224,12 +1263,20 @@
 </svg>
         Reset
       </button>
-<button class="secondary" id="skipBreakBtn" onclick="skipBreak()" style="display: none;">
+<button class="secondary" id="skipBreakBtn" onclick="handleSkipBreakClick()" style="display: none;">
 <svg fill="none" height="16" viewbox="0 0 16 16" width="16" xmlns="http://www.w3.org/2000/svg">
 <path d="M13 3L3 13M3 3L13 13" stroke="currentColor" stroke-linecap="round" stroke-width="2"></path>
 </svg>
         Skip Break
       </button>
+</div>
+<div class="quick-break-row" id="quickBreakRow">
+<span class="quick-break-label">Need a break now?</span>
+<div class="quick-break-buttons">
+<button class="quick-break-btn" onclick="startManualBreak(5)">5 min</button>
+<button class="quick-break-btn" onclick="startManualBreak(15)">15 min</button>
+<button class="quick-break-btn" onclick="startManualBreak(60)">1 hour</button>
+</div>
 </div>
 </section>
 
@@ -1480,6 +1527,13 @@
     let currentSession = 1;
     let currentMode = 'focus';
 
+    // Manual ("take a break now") state. A manual break pauses the current
+    // focus session in place - currentSession and the scheduled short/long/
+    // lunch cadence are never touched - and auto-resumes it afterward.
+    let isManualBreak = false;
+    let manualBreakDuration = 0; // seconds
+    let savedFocusState = null; // { timeLeft, totalTime, wasRunning } while a manual break is active
+
     // ------------------------------------------------------------------
     // Daily history: sessions are recorded per calendar day instead of as
     // one continuous lifetime total, so productivity can be tracked and
@@ -1697,20 +1751,25 @@
       evaluateWakeLockPolicy(true); // user gesture - worth retrying even if previously denied
       updateDisplay();
       
-      // Show notification when timer starts
-      if (currentMode === 'focus') {
-        showNotification('Focus Session Started', 'Time to focus! Get productive!', 'focus', 3000);
-        notifyUser('Time to focus! Get productive!', 'Focus Session Started');
-      } else {
-        const breakType = getCurrentBreakType();
-        let breakMessage = 'Time for a break! Relax and recharge.';
-        if (breakType === 'long') {
-          breakMessage = 'Time for a long break! Rest well.';
-        } else if (breakType === 'lunch') {
-          breakMessage = 'Time for lunch! Enjoy your meal.';
+      // Show notification when timer starts. Manual breaks already sent
+      // their own "Break Started" notification when triggered (see
+      // startManualBreak), so skip the generic one here - both on first
+      // start and on resuming from a pause, to avoid repeating it.
+      if (!isManualBreak) {
+        if (currentMode === 'focus') {
+          showNotification('Focus Session Started', 'Time to focus! Get productive!', 'focus', 3000);
+          notifyUser('Time to focus! Get productive!', 'Focus Session Started');
+        } else {
+          const breakType = getCurrentBreakType();
+          let breakMessage = 'Time for a break! Relax and recharge.';
+          if (breakType === 'long') {
+            breakMessage = 'Time for a long break! Rest well.';
+          } else if (breakType === 'lunch') {
+            breakMessage = 'Time for lunch! Enjoy your meal.';
+          }
+          showNotification('Break Started', breakMessage, 'break', 3000);
+          notifyUser(breakMessage, 'Break Started');
         }
-        showNotification('Break Started', breakMessage, 'break', 3000);
-        notifyUser(breakMessage, 'Break Started');
       }
 
       timerInterval = setInterval(() => {
@@ -1718,6 +1777,12 @@
           clearInterval(timerInterval);
           isTimerRunning = false;
           evaluateWakeLockPolicy();
+
+          if (isManualBreak) {
+            finishManualBreak(false);
+            return;
+          }
+
           logSession(`${getModeLabel(currentMode)} completed`);
 
           // Record this completed session against the active day BEFORE
@@ -1775,7 +1840,9 @@
       document.getElementById('timer').style.animation = 'none';
       
       // Reset to current mode's duration
-      if (currentMode === 'focus') {
+      if (isManualBreak) {
+        totalTime = manualBreakDuration;
+      } else if (currentMode === 'focus') {
         totalTime = settings.focusDuration * 60;
       } else {
         const breakType = getCurrentBreakType();
@@ -1794,7 +1861,9 @@
       
       timeLeft = totalTime;
       updateDisplay();
-      document.getElementById('status').textContent = currentMode === 'focus' ? 'Ready to Focus' : 'Ready for a Break';
+      document.getElementById('status').textContent = isManualBreak
+        ? getModeLabel('break')
+        : (currentMode === 'focus' ? 'Ready to Focus' : 'Ready for a Break');
       updateSkipBreakButton();
       saveState();
       
@@ -1818,12 +1887,97 @@
       showNotification('Break Skipped', 'You skipped your break time.', 'warning', 2000);
     }
 
+    // The Skip Break button is shared between scheduled breaks and manual
+    // ones, since it's always doing the same conceptual thing ("end this
+    // break early") - route to whichever handler actually applies.
+    function handleSkipBreakClick() {
+      if (isManualBreak) {
+        finishManualBreak(true);
+      } else {
+        skipBreak();
+      }
+    }
+
+    // "Take a break now" - available only during a focus session (running
+    // or idle), per design. Pauses the focus session exactly where it is
+    // and starts a custom-duration break; currentSession and the
+    // configured short/long/lunch schedule are never touched, so this
+    // can never push a scheduled break off course.
+    function startManualBreak(minutes) {
+      if (currentMode !== 'focus') return;
+
+      savedFocusState = {
+        timeLeft: timeLeft,
+        totalTime: totalTime,
+        wasRunning: isTimerRunning
+      };
+
+      clearInterval(timerInterval);
+      isTimerRunning = false;
+
+      isManualBreak = true;
+      manualBreakDuration = minutes * 60;
+      currentMode = 'break';
+      totalTime = manualBreakDuration;
+      timeLeft = totalTime;
+
+      updateDisplay();
+      updateSkipBreakButton();
+
+      showNotification('Break Started', `Taking a ${minutes}-minute break. Your focus session is paused and will resume after.`, 'break', 3000);
+      notifyUser(`Taking a ${minutes}-minute break.`, 'Break Started');
+      saveState();
+
+      startTimer();
+    }
+
+    // skipped: true if ended early via Skip Break, false if it ran out naturally.
+    function finishManualBreak(skipped) {
+      if (!isManualBreak || !savedFocusState) return;
+
+      clearInterval(timerInterval);
+      isTimerRunning = false;
+      evaluateWakeLockPolicy();
+
+      const elapsed = manualBreakDuration - timeLeft;
+      recordCompletedSession('break', 'manual', elapsed);
+      logSession(`Manual break ${skipped ? 'skipped' : 'completed'}`);
+
+      const restore = savedFocusState;
+      isManualBreak = false;
+      manualBreakDuration = 0;
+      savedFocusState = null;
+
+      currentMode = 'focus';
+      timeLeft = restore.timeLeft;
+      totalTime = restore.totalTime;
+
+      document.getElementById('timer').style.animation = 'none';
+      updateDisplay();
+      updateSkipBreakButton();
+
+      showNotification('Break Complete', 'Back to focus! Your session has resumed.', 'success', 3000);
+      notifyUser('Back to focus! Your session has resumed.', 'Break Complete');
+
+      if (restore.wasRunning) {
+        startTimer();
+      } else {
+        document.getElementById('status').textContent = 'Ready to Focus';
+        evaluateWakeLockPolicy();
+        saveState();
+      }
+    }
+
     function updateSkipBreakButton() {
       const skipBtn = document.getElementById('skipBreakBtn');
+      const quickBreakRow = document.getElementById('quickBreakRow');
       if (currentMode === 'break') {
         skipBtn.style.display = 'block';
       } else {
         skipBtn.style.display = 'none';
+      }
+      if (quickBreakRow) {
+        quickBreakRow.style.display = currentMode === 'focus' ? 'flex' : 'none';
       }
     }
 
@@ -1851,7 +2005,7 @@
     // picks up the new duration the next time it resets or a new
     // session/break begins (so a live session is never abruptly disrupted).
     function syncTimerWithSettings() {
-      if (isTimerRunning) return;
+      if (isTimerRunning || isManualBreak) return;
 
       let newTotal;
       if (currentMode === 'focus') {
@@ -1883,7 +2037,7 @@
     // disrupt a running countdown), and only for whichever duration field
     // is actually relevant to the mode currently showing on the timer.
     function previewDurationInput() {
-      if (isTimerRunning) return;
+      if (isTimerRunning || isManualBreak) return;
 
       let newTotal;
       if (currentMode === 'focus') {
@@ -2021,6 +2175,8 @@
     function getModeLabel(mode) {
       if (mode === 'focus') {
         return '🧠 Focus Time';
+      } else if (isManualBreak) {
+        return `☕ Break (${Math.round(manualBreakDuration / 60)} min)`;
       } else {
         const breakType = getCurrentBreakType();
         switch(breakType) {
@@ -2424,7 +2580,7 @@
                        typeof s.durationSeconds === 'number' && isFinite(s.durationSeconds) && s.durationSeconds >= 0)
           .map(s => ({
             type: s.type,
-            breakType: (s.breakType === 'short' || s.breakType === 'long' || s.breakType === 'lunch') ? s.breakType : null,
+            breakType: (s.breakType === 'short' || s.breakType === 'long' || s.breakType === 'lunch' || s.breakType === 'manual') ? s.breakType : null,
             durationSeconds: Math.round(s.durationSeconds),
             completedAt: (typeof s.completedAt === 'number' && isFinite(s.completedAt)) ? s.completedAt : Date.now()
           }));
@@ -2808,8 +2964,24 @@
         isTimerRunning = false;
         evaluateWakeLockPolicy();
 
+        // Clear any in-progress manual break so its state can't linger and
+        // corrupt a later Reset (e.g. resetTimer() would otherwise reset to
+        // a stale manual-break duration instead of the real focus/break one).
+        const wasManualBreak = isManualBreak;
+        isManualBreak = false;
+        manualBreakDuration = 0;
+        savedFocusState = null;
+        if (wasManualBreak) {
+          // A manual break always pauses a focus session, so ending the day
+          // mid-manual-break resumes into focus - but totalTime is
+          // currently the manual break's duration, so it must be
+          // recalculated rather than left stale.
+          currentMode = 'focus';
+          totalTime = settings.focusDuration * 60;
+        }
+
         // Idle the current session (same effect as Reset) without touching
-        // activeDate, mode, session count, or any history.
+        // activeDate, session count, or any history.
         timeLeft = totalTime;
         updateDisplay();
         document.getElementById('status').textContent = currentMode === 'focus' ? 'Ready to Focus' : 'Ready for a Break';
@@ -2851,6 +3023,13 @@
         totalTime = settings.focusDuration * 60;
         timeLeft = totalTime;
 
+        // Clear any in-progress manual break - New Day always starts a
+        // completely fresh focus session, so nothing about a break that
+        // was happening on the previous day should carry over.
+        isManualBreak = false;
+        manualBreakDuration = 0;
+        savedFocusState = null;
+
         updateDisplay();
         updateSkipBreakButton();
         document.getElementById('sessionCount').textContent = 'Session 1';
@@ -2873,9 +3052,13 @@
     function saveState() {
       const state = {
         timeLeft,
+        totalTime,
         currentSession,
         currentMode,
-        activeDate
+        activeDate,
+        isManualBreak,
+        manualBreakDuration,
+        savedFocusState
       };
       
       storageSet('deepFlowState', JSON.stringify(state));
@@ -2889,6 +3072,9 @@
           if (typeof state.timeLeft === 'number' && state.timeLeft >= 0) {
             timeLeft = state.timeLeft;
           }
+          if (typeof state.totalTime === 'number' && state.totalTime > 0) {
+            totalTime = state.totalTime;
+          }
           if (typeof state.currentSession === 'number' && state.currentSession >= 1) {
             currentSession = state.currentSession;
           }
@@ -2898,6 +3084,31 @@
           if (typeof state.activeDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(state.activeDate)) {
             activeDate = state.activeDate;
           }
+
+          // Manual break state, restored defensively: if it's flagged as
+          // active but the saved-focus snapshot is missing or malformed,
+          // just drop back to a normal focus/break state rather than
+          // leaving the app stuck with no way back.
+          const savedFocus = state.savedFocusState;
+          const focusSnapshotValid = savedFocus &&
+            typeof savedFocus.timeLeft === 'number' && savedFocus.timeLeft >= 0 &&
+            typeof savedFocus.totalTime === 'number' && savedFocus.totalTime > 0;
+
+          if (state.isManualBreak === true && focusSnapshotValid &&
+              typeof state.manualBreakDuration === 'number' && state.manualBreakDuration > 0) {
+            isManualBreak = true;
+            manualBreakDuration = state.manualBreakDuration;
+            savedFocusState = {
+              timeLeft: savedFocus.timeLeft,
+              totalTime: savedFocus.totalTime,
+              wasRunning: !!savedFocus.wasRunning
+            };
+          } else {
+            isManualBreak = false;
+            manualBreakDuration = 0;
+            savedFocusState = null;
+          }
+
           // Note: an old lifetime `stats` field from a prior version of the
           // app (if present) is intentionally ignored now that stats are
           // tracked per day via dailyHistory instead.
